@@ -3,58 +3,34 @@
 import { useEffect, useRef } from "react"
 
 export default function SocialBarAds() {
-  const mountedRef = useRef(true)
-  const scriptLoadedRef = useRef(false)
+  const scriptRef = useRef<HTMLScriptElement | null>(null)
 
   useEffect(() => {
-    mountedRef.current = true
+    // Create and inject the social bar ads script
+    const script = document.createElement("script")
+    script.type = "text/javascript"
+    script.src = "//pl27324781.profitableratecpm.com/e6/ff/2d/e6ff2d9b1f830c965a76b4ee4b85c3ae.js"
+    script.async = true
 
-    const initializeAds = () => {
-      try {
-        // Force reload the script
-        scriptLoadedRef.current = true
+    // Store reference
+    scriptRef.current = script
 
-        // Create script
-        const script = document.createElement("script")
-        script.type = "text/javascript"
-        script.src = "//pl27324781.profitableratecpm.com/e6/ff/2d/e6ff2d9b1f830c965a76b4ee4b85c3ae.js"
-        script.async = true
-        script.setAttribute("data-social-bar-ads", "true")
+    // Add script to head
+    document.head.appendChild(script)
 
-        script.onload = () => {
-          if (mountedRef.current) {
-            console.log("Social bar ads loaded successfully")
-          }
+    // Cleanup function with proper error handling
+    return () => {
+      if (scriptRef.current && scriptRef.current.parentNode) {
+        try {
+          scriptRef.current.parentNode.removeChild(scriptRef.current)
+        } catch (error) {
+          console.log("Script already removed or not found")
         }
-
-        script.onerror = () => {
-          if (mountedRef.current) {
-            console.log("Social bar ads failed to load")
-            scriptLoadedRef.current = false
-          }
-        }
-
-        document.head.appendChild(script)
-      } catch (error) {
-        console.log("Social bar ads error:", error)
-        scriptLoadedRef.current = false
       }
     }
-
-    // Add small delay to ensure DOM is ready
-    setTimeout(initializeAds, 1000)
-
-    return () => {
-      mountedRef.current = false
-    }
   }, [])
 
-  // Component unmount cleanup
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
-
+  // This component doesn't render anything visible
+  // The social bar ads will be handled by the script
   return null
 }

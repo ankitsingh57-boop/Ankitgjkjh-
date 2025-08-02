@@ -7,6 +7,8 @@ import { ArrowLeft, Star, Calendar, Clock, Download, Play, Heart, Share2 } from 
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import BannerAds from "@/components/banner-ads"
+import SocialBarAds from "@/components/social-bar-ads"
 import { getMovieById, type Movie } from "@/lib/supabase"
 
 interface MoviePageProps {
@@ -230,6 +232,9 @@ export default function MoviePage({ params }: MoviePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
+      {/* Social Bar Ads */}
+      <SocialBarAds />
+
       {/* Header */}
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -410,6 +415,9 @@ export default function MoviePage({ params }: MoviePageProps) {
           </div>
         </div>
       </section>
+
+      {/* Banner Ads Section */}
+      <BannerAds />
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
