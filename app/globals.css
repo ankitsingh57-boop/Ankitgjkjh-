@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -120,4 +120,129 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Performance Optimizations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Optimize animations */
+.animate-gradient-x {
+  will-change: background-position;
+}
+
+.animate-fade-in-up {
+  will-change: opacity, transform;
+}
+
+.animate-pulse {
+  will-change: opacity;
+}
+
+.animate-spin {
+  will-change: transform;
+}
+
+.animate-bounce {
+  will-change: transform;
+}
+
+/* Optimize hover effects */
+.group:hover .group-hover\:scale-110 {
+  will-change: transform;
+}
+
+/* Optimize transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Optimize images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Optimize scrolling */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Line clamp utility */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Try to override third-party ads (may not work) */
+/* Social Bar Ads Override Attempts */
+div[id*="profitableratecpm"],
+div[class*="profitableratecpm"],
+iframe[src*="profitableratecpm"] {
+  max-width: 300px !important;
+  max-height: 200px !important;
+  transform: scale(0.7) !important;
+  transform-origin: center !important;
+}
+
+/* Try to target popup ads */
+div[style*="position: fixed"],
+div[style*="z-index"] {
+  max-width: 300px !important;
+  max-height: 200px !important;
+}
+
+/* Specific targeting for ad containers */
+body > div:not([class]):not([id]) {
+  max-width: 300px !important;
+  max-height: 200px !important;
+}
+
+/* Try to make ads smaller with transform */
+[data-social-bar-ads] ~ * {
+  transform: scale(0.8) !important;
+  transform-origin: top left !important;
 }
