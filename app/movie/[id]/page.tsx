@@ -7,8 +7,6 @@ import { ArrowLeft, Star, Calendar, Clock, Download, Play, Heart, Share2 } from 
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import BannerAds from "@/components/banner-ads"
-import SocialBarAds from "@/components/social-bar-ads"
 import { getMovieById, type Movie } from "@/lib/supabase"
 
 interface MoviePageProps {
@@ -32,16 +30,18 @@ export default function MoviePage({ params }: MoviePageProps) {
     setLoading(false)
   }
 
-  // Updated ads integration function with new URL
+  // Fixed ads integration function with proper error handling
   const handleDownloadClick = (downloadUrl: string, linkNumber: number) => {
     // Updated ads URL
     const adsUrl = "https://www.profitableratecpm.com/ens0awetrm?key=3a67244d4e04111e273bbc0cedf0d2db"
 
     // Open ads in new tab
-    const adsWindow = window.open(adsUrl, "_blank")
+    window.open(adsUrl, "_blank")
 
-    // Show user notification with better UX
+    // Create notification with unique ID
+    const notificationId = `notification-${Date.now()}-${Math.random()}`
     const notification = document.createElement("div")
+    notification.id = notificationId
     notification.innerHTML = `
       <div style="
         position: fixed;
@@ -101,15 +101,27 @@ export default function MoviePage({ params }: MoviePageProps) {
     `
     document.body.appendChild(notification)
 
+    // Safe removal function
+    const safeRemoveElement = (elementId: string) => {
+      const element = document.getElementById(elementId)
+      if (element && element.parentNode) {
+        try {
+          element.parentNode.removeChild(element)
+        } catch (error) {
+          console.log("Element already removed:", elementId)
+        }
+      }
+    }
+
     // Reduced wait time to 3 seconds for better user experience
     setTimeout(() => {
-      // Remove notification
-      if (document.body.contains(notification)) {
-        document.body.removeChild(notification)
-      }
+      // Safely remove first notification
+      safeRemoveElement(notificationId)
 
-      // Show download ready notification
+      // Create download ready notification with unique ID
+      const downloadNotificationId = `download-notification-${Date.now()}-${Math.random()}`
       const downloadNotification = document.createElement("div")
+      downloadNotification.id = downloadNotificationId
       downloadNotification.innerHTML = `
         <div style="
           position: fixed;
@@ -133,7 +145,13 @@ export default function MoviePage({ params }: MoviePageProps) {
           <div style="font-size: 14px; opacity: 0.9; line-height: 1.4; margin-bottom: 16px;">
             Your movie download is ready. Click below to start downloading now.
           </div>
-          <button onclick="window.open('${downloadUrl}', '_blank'); document.body.removeChild(this.parentElement.parentElement)" style="
+          <button onclick="
+            window.open('${downloadUrl}', '_blank'); 
+            const elem = document.getElementById('${downloadNotificationId}');
+            if (elem && elem.parentNode) {
+              elem.parentNode.removeChild(elem);
+            }
+          " style="
             width: 100%;
             background: rgba(255,255,255,0.2);
             border: 2px solid rgba(255,255,255,0.3);
@@ -153,7 +171,12 @@ export default function MoviePage({ params }: MoviePageProps) {
             Start Download Now
           </button>
           <div style="text-align: center; margin-top: 12px;">
-            <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="
+            <button onclick="
+              const elem = document.getElementById('${downloadNotificationId}');
+              if (elem && elem.parentNode) {
+                elem.parentNode.removeChild(elem);
+              }
+            " style="
               background: none;
               border: none;
               color: rgba(255,255,255,0.7);
@@ -169,13 +192,11 @@ export default function MoviePage({ params }: MoviePageProps) {
       `
       document.body.appendChild(downloadNotification)
 
-      // Auto remove after 30 seconds
+      // Auto remove after 30 seconds with safe removal
       setTimeout(() => {
-        if (document.body.contains(downloadNotification)) {
-          document.body.removeChild(downloadNotification)
-        }
+        safeRemoveElement(downloadNotificationId)
       }, 30000)
-    }, 3000) // Reduced to 3 seconds
+    }, 3000) // 3 seconds delay
   }
 
   if (loading) {
@@ -209,9 +230,6 @@ export default function MoviePage({ params }: MoviePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
-      {/* Social Bar Ads */}
-      <SocialBarAds />
-
       {/* Header */}
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -392,9 +410,6 @@ export default function MoviePage({ params }: MoviePageProps) {
           </div>
         </div>
       </section>
-
-      {/* Banner Ads Section */}
-      <BannerAds />
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">

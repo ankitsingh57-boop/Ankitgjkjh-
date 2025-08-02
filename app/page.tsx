@@ -77,7 +77,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
-      {/* Social Bar Ads */}
+      {/* Social Bar Ads - Only on Home Page */}
       <SocialBarAds />
 
       {/* Admin Panel */}
@@ -309,7 +309,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Banner Ads Section */}
+      {/* Banner Ads Section - Only on Home Page */}
       <BannerAds />
 
       {/* Footer with Gradient */}
