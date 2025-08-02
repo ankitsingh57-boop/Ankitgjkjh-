@@ -7,6 +7,8 @@ import { ArrowLeft, Star, Calendar, Clock, Download, Play, Heart, Share2 } from 
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import BannerAds from "@/components/banner-ads"
+import SocialBarAds from "@/components/social-bar-ads"
 import { getMovieById, type Movie } from "@/lib/supabase"
 
 interface MoviePageProps {
@@ -30,15 +32,15 @@ export default function MoviePage({ params }: MoviePageProps) {
     setLoading(false)
   }
 
-  // Ads integration function
+  // Updated ads integration function with new URL
   const handleDownloadClick = (downloadUrl: string, linkNumber: number) => {
-    // First show ads
-    const adsUrl = "https://www.profitableratecpm.com/emix1pwbw6?key=e46f171ac3a77d9a94d8c5617fdc91f9"
+    // Updated ads URL
+    const adsUrl = "https://www.profitableratecpm.com/ens0awetrm?key=3a67244d4e04111e273bbc0cedf0d2db"
 
     // Open ads in new tab
     const adsWindow = window.open(adsUrl, "_blank")
 
-    // Show user notification
+    // Show user notification with better UX
     const notification = document.createElement("div")
     notification.innerHTML = `
       <div style="
@@ -53,7 +55,7 @@ export default function MoviePage({ params }: MoviePageProps) {
         z-index: 10000;
         font-family: system-ui;
         font-weight: 600;
-        max-width: 300px;
+        max-width: 320px;
         animation: slideIn 0.5s ease-out;
       ">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -61,7 +63,7 @@ export default function MoviePage({ params }: MoviePageProps) {
           <span>Download Link ${linkNumber}</span>
         </div>
         <div style="font-size: 14px; opacity: 0.9; line-height: 1.4;">
-          Please wait 5 seconds after the ad loads, then close the ad tab to get your download link!
+          Please wait 3 seconds for the ad to load, then close the ad tab to get your download!
         </div>
         <div style="margin-top: 12px; text-align: center;">
           <div style="
@@ -69,8 +71,20 @@ export default function MoviePage({ params }: MoviePageProps) {
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
           ">
-            Ad loading... Please wait
+            <div style="
+              width: 16px;
+              height: 16px;
+              border: 2px solid rgba(255,255,255,0.3);
+              border-top: 2px solid white;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            "></div>
+            Ad loading...
           </div>
         </div>
       </div>
@@ -79,14 +93,20 @@ export default function MoviePage({ params }: MoviePageProps) {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       </style>
     `
     document.body.appendChild(notification)
 
-    // After 5 seconds, show download option
+    // Reduced wait time to 3 seconds for better user experience
     setTimeout(() => {
       // Remove notification
-      document.body.removeChild(notification)
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification)
+      }
 
       // Show download ready notification
       const downloadNotification = document.createElement("div")
@@ -111,7 +131,7 @@ export default function MoviePage({ params }: MoviePageProps) {
             <span>Download Ready!</span>
           </div>
           <div style="font-size: 14px; opacity: 0.9; line-height: 1.4; margin-bottom: 16px;">
-            Your download link is now ready. Click below to start downloading.
+            Your movie download is ready. Click below to start downloading now.
           </div>
           <button onclick="window.open('${downloadUrl}', '_blank'); document.body.removeChild(this.parentElement.parentElement)" style="
             width: 100%;
@@ -124,10 +144,15 @@ export default function MoviePage({ params }: MoviePageProps) {
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
           " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-            🚀 Start Download Now
+            <span style="font-size: 16px;">🚀</span>
+            Start Download Now
           </button>
-          <div style="text-align: center; margin-top: 8px;">
+          <div style="text-align: center; margin-top: 12px;">
             <button onclick="document.body.removeChild(this.parentElement.parentElement)" style="
               background: none;
               border: none;
@@ -135,6 +160,7 @@ export default function MoviePage({ params }: MoviePageProps) {
               font-size: 12px;
               cursor: pointer;
               text-decoration: underline;
+              padding: 4px 8px;
             ">
               Close
             </button>
@@ -149,7 +175,7 @@ export default function MoviePage({ params }: MoviePageProps) {
           document.body.removeChild(downloadNotification)
         }
       }, 30000)
-    }, 5000) // 5 second delay
+    }, 3000) // Reduced to 3 seconds
   }
 
   if (loading) {
@@ -183,6 +209,9 @@ export default function MoviePage({ params }: MoviePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
+      {/* Social Bar Ads */}
+      <SocialBarAds />
+
       {/* Header */}
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -295,17 +324,17 @@ export default function MoviePage({ params }: MoviePageProps) {
                     <span className="text-orange-400">Download</span> <span className="text-teal-400 ml-2">Links</span>
                   </h2>
 
-                  {/* Ads Notice */}
+                  {/* Updated Ads Notice */}
                   <div className="mb-8 p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-400/30 rounded-xl">
                     <div className="flex items-center mb-3">
                       <span className="text-2xl mr-3">💡</span>
-                      <h3 className="text-white font-bold text-lg">Download Instructions</h3>
+                      <h3 className="text-white font-bold text-lg">Quick Download Instructions</h3>
                     </div>
                     <div className="text-white/80 text-sm space-y-2">
                       <p>• Click on any download link below</p>
-                      <p>• Wait 5 seconds for the ad to load completely</p>
+                      <p>• Wait just 3 seconds for the ad to load</p>
                       <p>• Close the ad tab to get your download link</p>
-                      <p>• Your download will start automatically</p>
+                      <p>• Your movie download will start immediately</p>
                     </div>
                   </div>
 
@@ -324,33 +353,35 @@ export default function MoviePage({ params }: MoviePageProps) {
                             <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1">
                               HD Quality
                             </Badge>
+                            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1">
+                              Fast
+                            </Badge>
                           </div>
                         </div>
                         <Button
-                          className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white shadow-lg h-14 text-lg rounded-xl transition-all duration-300 hover:scale-105 relative overflow-hidden"
+                          className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white shadow-lg h-14 text-lg rounded-xl transition-all duration-300 hover:scale-105 relative overflow-hidden group"
                           onClick={() => handleDownloadClick(link.url, index + 1)}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                           <Download className="mr-3 h-6 w-6" />
                           Download Link {index + 1}
-                          <span className="ml-2 text-sm opacity-80">(Click to Start)</span>
+                          <span className="ml-2 text-sm opacity-80">(Quick Download)</span>
                         </Button>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-8 p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                  <div className="mt-8 p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
                     <div className="flex items-start space-x-3">
-                      <span className="text-yellow-400 text-xl">⚠️</span>
+                      <span className="text-green-400 text-xl">✨</span>
                       <div>
-                        <p className="text-yellow-400 text-sm leading-relaxed">
-                          <strong>Important:</strong> We use ads to keep our service free. Please wait for the ad to
-                          load completely before closing it. This helps us maintain the website and provide you with the
-                          latest movies.
+                        <p className="text-green-400 text-sm leading-relaxed">
+                          <strong>Fast & Safe:</strong> We've optimized the download process! Now you only need to wait
+                          3 seconds instead of 5. All downloads are virus-free and safe.
                         </p>
-                        <p className="text-yellow-400/80 text-xs mt-2">
-                          All downloads are virus-free and safe. If you face any issues, please refresh the page and try
-                          again.
+                        <p className="text-green-400/80 text-xs mt-2">
+                          Ads help us keep this service free and updated with the latest movies. Thank you for your
+                          support!
                         </p>
                       </div>
                     </div>
@@ -362,8 +393,11 @@ export default function MoviePage({ params }: MoviePageProps) {
         </div>
       </section>
 
+      {/* Banner Ads Section */}
+      <BannerAds />
+
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 mt-20 backdrop-blur-sm">
+      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">

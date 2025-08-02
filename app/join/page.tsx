@@ -6,6 +6,8 @@ import { ArrowLeft, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import BannerAds from "@/components/banner-ads"
+import SocialBarAds from "@/components/social-bar-ads"
 import { getJoinLinks, type JoinLink } from "@/lib/supabase"
 
 export default function JoinPage() {
@@ -38,6 +40,9 @@ export default function JoinPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
+      {/* Social Bar Ads */}
+      <SocialBarAds />
+
       {/* Header */}
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -152,8 +157,11 @@ export default function JoinPage() {
         </div>
       </section>
 
+      {/* Banner Ads Section */}
+      <BannerAds />
+
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 mt-16 backdrop-blur-sm">
+      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">
