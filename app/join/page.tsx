@@ -99,9 +99,9 @@ export default function JoinPage() {
                       <ExternalLink className="h-8 w-8 text-white" />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-4 drop-shadow-lg">{link.title}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-4 drop-shadow-lg text-shadow-lg">{link.title}</h3>
 
-                    <p className="text-white/95 leading-relaxed text-base font-medium drop-shadow-md">
+                    <p className="text-white leading-relaxed text-base font-semibold drop-shadow-md text-shadow-md">
                       {link.description}
                     </p>
 
@@ -130,8 +130,10 @@ export default function JoinPage() {
                     <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
                       <span className="text-white font-bold text-lg">1</span>
                     </div>
-                    <h4 className="font-bold mb-2 text-orange-400 text-lg drop-shadow-md">Latest Updates</h4>
-                    <p className="text-white/95 font-medium drop-shadow-sm">
+                    <h4 className="font-bold mb-2 text-orange-400 text-lg drop-shadow-md text-shadow-lg">
+                      Latest Updates
+                    </h4>
+                    <p className="text-white font-semibold drop-shadow-sm text-shadow-md">
                       Get notified about new movie releases instantly
                     </p>
                   </div>
@@ -192,6 +194,12 @@ export default function JoinPage() {
       </footer>
 
       <style jsx global>{`
+        .text-shadow-lg {
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .text-shadow-md {
+          text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 0, 0, 0.4);
+        }
         @keyframes gradient-x {
           0%, 100% {
             background-position: 0% 50%;
