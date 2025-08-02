@@ -2,35 +2,60 @@
 
 import { useEffect, useRef } from "react"
 
+// Global flag to prevent multiple script loading
+let globalScriptLoaded = false
+
 export default function SocialBarAds() {
-  const scriptRef = useRef<HTMLScriptElement | null>(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    // Create and inject the social bar ads script
-    const script = document.createElement("script")
-    script.type = "text/javascript"
-    script.src = "//pl27324781.profitableratecpm.com/e6/ff/2d/e6ff2d9b1f830c965a76b4ee4b85c3ae.js"
-    script.async = true
+    mountedRef.current = true
 
-    // Store reference
-    scriptRef.current = script
+    // Check if script already loaded globally
+    if (globalScriptLoaded || document.querySelector('script[src*="pl27324781.profitableratecpm.com"]')) {
+      console.log("Social bar ads already loaded globally, skipping...")
+      return
+    }
 
-    // Add script to head
-    document.head.appendChild(script)
+    const initializeAds = () => {
+      try {
+        // Mark as loaded globally
+        globalScriptLoaded = true
 
-    // Cleanup function with proper error handling
-    return () => {
-      if (scriptRef.current && scriptRef.current.parentNode) {
-        try {
-          scriptRef.current.parentNode.removeChild(scriptRef.current)
-        } catch (error) {
-          console.log("Script already removed or not found")
+        // Create script only once
+        const script = document.createElement("script")
+        script.type = "text/javascript"
+        script.src = "//pl27324781.profitableratecpm.com/e6/ff/2d/e6ff2d9b1f830c965a76b4ee4b85c3ae.js"
+        script.async = true
+        script.setAttribute("data-social-bar-ads", "true")
+
+        script.onload = () => {
+          if (mountedRef.current) {
+            console.log("Social bar ads loaded successfully")
+          }
         }
+
+        script.onerror = () => {
+          if (mountedRef.current) {
+            console.log("Social bar ads failed to load")
+            globalScriptLoaded = false // Reset on error
+          }
+        }
+
+        document.head.appendChild(script)
+      } catch (error) {
+        console.log("Social bar ads error:", error)
+        globalScriptLoaded = false
       }
+    }
+
+    // Small delay for DOM ready
+    setTimeout(initializeAds, 500)
+
+    return () => {
+      mountedRef.current = false
     }
   }, [])
 
-  // This component doesn't render anything visible
-  // The social bar ads will be handled by the script
   return null
 }
