@@ -8,7 +8,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import AdminPanel from "@/components/admin-panel"
-import BannerAds from "@/components/banner-ads"
 import SocialBarAds from "@/components/social-bar-ads"
 import { getMovies, type Movie } from "@/lib/supabase"
 
@@ -308,9 +307,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* Banner Ads Section - Only on Home Page */}
-      <BannerAds />
 
       {/* Footer with Gradient */}
       <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
