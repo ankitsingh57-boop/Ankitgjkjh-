@@ -7,6 +7,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getJoinLinks, type JoinLink } from "@/lib/supabase"
+import GoogleMultiplexAds from "@/components/google-multiplex-ads"
 
 export default function JoinPage() {
   const [joinLinks, setJoinLinks] = useState<JoinLink[]>([])
@@ -116,6 +117,16 @@ export default function JoinPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Multiplex Ads */}
+          <div className="mt-12 animate-fade-in-up" style={{ animationDelay: "0.8s" }}>
+            <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
+              <h3 className="text-white text-xl font-bold mb-4 text-center">
+                <span className="text-orange-400">Discover</span> <span className="text-teal-400">More</span>
+              </h3>
+              <GoogleMultiplexAds className="max-w-full" style={{ display: "block", minHeight: "200px" }} />
+            </div>
           </div>
 
           {/* Additional Info */}
