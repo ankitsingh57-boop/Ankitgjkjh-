@@ -35,12 +35,12 @@ export default function HomePage() {
 
   const featuredMovies = movies.filter((movie) => movie.featured)
 
-  // Auto-rotate hero banner every 3 seconds with smooth transition
+  // Auto-rotate hero banner every 5 seconds with smooth transition
   useEffect(() => {
     if (featuredMovies.length > 1) {
       const interval = setInterval(() => {
         setCurrentHeroIndex((prev) => (prev + 1) % featuredMovies.length)
-      }, 3000)
+      }, 5000) // Changed from 3000 to 5000
       return () => clearInterval(interval)
     }
   }, [featuredMovies.length])
@@ -180,7 +180,8 @@ export default function HomePage() {
                 alt={currentHeroMovie.title}
                 fill
                 className="object-cover"
-                priority
+                priority={currentHeroIndex === 0} // Only first image gets priority
+                loading={currentHeroIndex === 0 ? "eager" : "lazy"}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 to-transparent" />
@@ -280,6 +281,9 @@ export default function HomePage() {
                     alt={movie.title}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute top-3 right-3">
