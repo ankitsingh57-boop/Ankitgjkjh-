@@ -7,9 +7,7 @@ import { ArrowLeft, Star, Calendar, Clock, Download, Play, Heart, Share2 } from 
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import GoogleAdSense from "@/components/google-adsense"
 import { getMovieById, type Movie } from "@/lib/supabase"
-import GoogleMultiplexAds from "@/components/google-multiplex-ads"
 
 interface MoviePageProps {
   params: {
@@ -256,13 +254,6 @@ export default function MoviePage({ params }: MoviePageProps) {
         </div>
       </header>
 
-      {/* Top Ad */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <GoogleAdSense adSlot="9957965588" className="max-w-full" style={{ display: "block", minHeight: "90px" }} />
-        </div>
-      </div>
-
       {/* Movie Detail Section */}
       <section className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -342,27 +333,6 @@ export default function MoviePage({ params }: MoviePageProps) {
               <p className="text-white leading-relaxed text-lg">{movie.description}</p>
             </div>
 
-            {/* Multiplex Ads - Related Content */}
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
-              <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-                <h3 className="text-white text-xl font-bold mb-4 text-center">
-                  <span className="text-orange-400">You Might</span> <span className="text-teal-400">Also Like</span>
-                </h3>
-                <GoogleMultiplexAds className="max-w-full" style={{ display: "block", minHeight: "200px" }} />
-              </div>
-            </div>
-
-            {/* Middle Ad */}
-            <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-              <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-                <GoogleAdSense
-                  adSlot="9957965588"
-                  className="max-w-full"
-                  style={{ display: "block", minHeight: "120px" }}
-                />
-              </div>
-            </div>
-
             {/* Download Section */}
             <div className="animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
               <Card className="bg-gradient-to-br from-orange-600/20 to-teal-600/20 border-orange-400/30 backdrop-blur-sm shadow-2xl">
@@ -440,13 +410,6 @@ export default function MoviePage({ params }: MoviePageProps) {
           </div>
         </div>
       </section>
-
-      {/* Bottom Ad */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <GoogleAdSense adSlot="9957965588" className="max-w-full" style={{ display: "block", minHeight: "120px" }} />
-        </div>
-      </div>
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">

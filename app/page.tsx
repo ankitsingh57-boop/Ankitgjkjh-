@@ -8,8 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import AdminPanel from "@/components/admin-panel"
-import GoogleAdSense from "@/components/google-adsense"
-import GoogleMultiplexAds from "@/components/google-multiplex-ads"
+import SocialBarAds from "@/components/social-bar-ads"
 import { getMovies, type Movie } from "@/lib/supabase"
 
 const categories = ["All", "Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance"]
@@ -36,12 +35,12 @@ export default function HomePage() {
 
   const featuredMovies = movies.filter((movie) => movie.featured)
 
-  // Auto-rotate hero banner every 5 seconds with smooth transition
+  // Auto-rotate hero banner every 3 seconds with smooth transition
   useEffect(() => {
     if (featuredMovies.length > 1) {
       const interval = setInterval(() => {
         setCurrentHeroIndex((prev) => (prev + 1) % featuredMovies.length)
-      }, 5000)
+      }, 3000)
       return () => clearInterval(interval)
     }
   }, [featuredMovies.length])
@@ -77,6 +76,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
+      {/* Social Bar Ads - Only on Home Page */}
+      <SocialBarAds />
+
       {/* Admin Panel */}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onDataChange={loadMovies} />}
 
@@ -168,13 +170,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Top Banner Ad */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <GoogleAdSense adSlot="9957965588" className="max-w-full" style={{ display: "block", minHeight: "90px" }} />
-        </div>
-      </div>
-
       {/* Hero Section - Clickable Poster Slider */}
       {currentHeroMovie && (
         <section className="relative h-[45vh] md:h-[55vh] overflow-hidden">
@@ -185,8 +180,7 @@ export default function HomePage() {
                 alt={currentHeroMovie.title}
                 fill
                 className="object-cover"
-                priority={currentHeroIndex === 0}
-                loading={currentHeroIndex === 0 ? "eager" : "lazy"}
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 to-transparent" />
@@ -267,98 +261,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Multiplex Ads - Native Content Style */}
-      <section className="container mx-auto px-4 py-6">
-        <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-          <h3 className="text-white text-lg font-semibold mb-4 text-center">
-            <span className="text-orange-400">Recommended</span> <span className="text-teal-400">Content</span>
-          </h3>
-          <GoogleMultiplexAds className="max-w-full" style={{ display: "block", minHeight: "200px" }} />
-        </div>
-      </section>
-
-      {/* Movies Grid with Ads */}
+      {/* Movies Grid with Animations */}
       <section className="container mx-auto px-4 py-8">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 animate-fade-in-up">
           <span className="text-orange-400">All</span> <span className="text-teal-400">Movies</span>
         </h2>
-
         <div className="grid grid-cols-2 gap-4 md:gap-6">
           {filteredMovies.map((movie, index) => (
-            <div key={movie.id}>
-              <Link href={`/movie/${movie.id}`}>
-                <div
-                  className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl animate-fade-in-up"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Movie Poster */}
-                  <div className="relative aspect-[3/4.5] overflow-hidden">
-                    <Image
-                      src={movie.image_url || "/placeholder.svg"}
-                      alt={movie.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      loading="lazy"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold text-xs animate-pulse">
-                        <Star className="w-3 h-3 mr-1" />
-                        {movie.rating}
-                      </Badge>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-3 rounded-full shadow-xl animate-bounce">
-                        <Play className="h-4 w-4 text-white" />
-                      </div>
+            <Link key={movie.id} href={`/movie/${movie.id}`}>
+              <div
+                className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl animate-fade-in-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Movie Poster */}
+                <div className="relative aspect-[3/4.5] overflow-hidden">
+                  <Image
+                    src={movie.image_url || "/placeholder.svg"}
+                    alt={movie.title}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold text-xs animate-pulse">
+                      <Star className="w-3 h-3 mr-1" />
+                      {movie.rating}
+                    </Badge>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-3 rounded-full shadow-xl animate-bounce">
+                      <Play className="h-4 w-4 text-white" />
                     </div>
                   </div>
-
-                  {/* Movie Info */}
-                  <div className="p-3 bg-gradient-to-r from-purple-900/20 to-transparent">
-                    <h3 className="text-white font-bold text-sm md:text-base group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
-                      {movie.title}
-                    </h3>
-                    <p className="text-teal-300 text-xs md:text-sm font-medium">{movie.year}</p>
-                  </div>
                 </div>
-              </Link>
 
-              {/* Ad after every 4 movies */}
-              {(index + 1) % 4 === 0 && (
-                <div className="col-span-2 my-6">
-                  <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-                    <GoogleAdSense
-                      adSlot="9957965588"
-                      className="max-w-full"
-                      style={{ display: "block", minHeight: "120px" }}
-                    />
-                  </div>
+                {/* Movie Info */}
+                <div className="p-3 bg-gradient-to-r from-purple-900/20 to-transparent">
+                  <h3 className="text-white font-bold text-sm md:text-base group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
+                    {movie.title}
+                  </h3>
+                  <p className="text-teal-300 text-xs md:text-sm font-medium">{movie.year}</p>
                 </div>
-              )}
-            </div>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
-
-      {/* Multiplex Ads - End of Movies */}
-      <div className="mt-12 mb-8">
-        <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm border border-white/10">
-          <h3 className="text-white text-lg font-semibold mb-4 text-center">
-            <span className="text-orange-400">More</span> <span className="text-teal-400">Recommendations</span>
-          </h3>
-          <GoogleMultiplexAds className="max-w-full" style={{ display: "block", minHeight: "200px" }} />
-        </div>
-      </div>
-
-      {/* Bottom Ad */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
-          <GoogleAdSense adSlot="9957965588" className="max-w-full" style={{ display: "block", minHeight: "120px" }} />
-        </div>
-      </div>
 
       {/* Footer with Gradient */}
       <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">

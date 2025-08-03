@@ -27,7 +27,6 @@ export default function SocialBarAds() {
         script.type = "text/javascript"
         script.src = "//pl27324781.profitableratecpm.com/e6/ff/2d/e6ff2d9b1f830c965a76b4ee4b85c3ae.js"
         script.async = true
-        script.defer = true // Add defer for better performance
         script.setAttribute("data-social-bar-ads", "true")
 
         script.onload = () => {
@@ -50,8 +49,8 @@ export default function SocialBarAds() {
       }
     }
 
-    // Small delay for DOM ready - reduced from 500 to 100
-    setTimeout(initializeAds, 100)
+    // Small delay for DOM ready
+    setTimeout(initializeAds, 500)
 
     return () => {
       mountedRef.current = false
