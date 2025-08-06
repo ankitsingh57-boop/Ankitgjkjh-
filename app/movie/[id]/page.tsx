@@ -30,175 +30,6 @@ export default function MoviePage({ params }: MoviePageProps) {
     setLoading(false)
   }
 
-  // Fixed ads integration function with proper error handling
-  const handleDownloadClick = (downloadUrl: string, linkNumber: number) => {
-    // Updated ads URL
-    const adsUrl = "https://www.profitableratecpm.com/ens0awetrm?key=3a67244d4e04111e273bbc0cedf0d2db"
-
-    // Open ads in new tab
-    window.open(adsUrl, "_blank")
-
-    // Create notification with unique ID
-    const notificationId = `notification-${Date.now()}-${Math.random()}`
-    const notification = document.createElement("div")
-    notification.id = notificationId
-    notification.innerHTML = `
-      <div style="
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #f97316, #14b8a6);
-        color: white;
-        padding: 16px 24px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        z-index: 10000;
-        font-family: system-ui;
-        font-weight: 600;
-        max-width: 320px;
-        animation: slideIn 0.5s ease-out;
-      ">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="font-size: 18px;">🎬</span>
-          <span>Download Link ${linkNumber}</span>
-        </div>
-        <div style="font-size: 14px; opacity: 0.9; line-height: 1.4;">
-          Please wait 3 seconds for the ad to load, then close the ad tab to get your download!
-        </div>
-        <div style="margin-top: 12px; text-align: center;">
-          <div style="
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-          ">
-            <div style="
-              width: 16px;
-              height: 16px;
-              border: 2px solid rgba(255,255,255,0.3);
-              border-top: 2px solid white;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-            "></div>
-            Ad loading...
-          </div>
-        </div>
-      </div>
-      <style>
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
-    `
-    document.body.appendChild(notification)
-
-    // Safe removal function
-    const safeRemoveElement = (elementId: string) => {
-      const element = document.getElementById(elementId)
-      if (element && element.parentNode) {
-        try {
-          element.parentNode.removeChild(element)
-        } catch (error) {
-          console.log("Element already removed:", elementId)
-        }
-      }
-    }
-
-    // Reduced wait time to 3 seconds for better user experience
-    setTimeout(() => {
-      // Safely remove first notification
-      safeRemoveElement(notificationId)
-
-      // Create download ready notification with unique ID
-      const downloadNotificationId = `download-notification-${Date.now()}-${Math.random()}`
-      const downloadNotification = document.createElement("div")
-      downloadNotification.id = downloadNotificationId
-      downloadNotification.innerHTML = `
-        <div style="
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          padding: 20px 24px;
-          border-radius: 12px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-          z-index: 10000;
-          font-family: system-ui;
-          font-weight: 600;
-          max-width: 320px;
-          animation: slideIn 0.5s ease-out;
-        ">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <span style="font-size: 20px;">✅</span>
-            <span>Download Ready!</span>
-          </div>
-          <div style="font-size: 14px; opacity: 0.9; line-height: 1.4; margin-bottom: 16px;">
-            Your movie download is ready. Click below to start downloading now.
-          </div>
-          <button onclick="
-            window.open('${downloadUrl}', '_blank'); 
-            const elem = document.getElementById('${downloadNotificationId}');
-            if (elem && elem.parentNode) {
-              elem.parentNode.removeChild(elem);
-            }
-          " style="
-            width: 100%;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-          " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-            <span style="font-size: 16px;">🚀</span>
-            Start Download Now
-          </button>
-          <div style="text-align: center; margin-top: 12px;">
-            <button onclick="
-              const elem = document.getElementById('${downloadNotificationId}');
-              if (elem && elem.parentNode) {
-                elem.parentNode.removeChild(elem);
-              }
-            " style="
-              background: none;
-              border: none;
-              color: rgba(255,255,255,0.7);
-              font-size: 12px;
-              cursor: pointer;
-              text-decoration: underline;
-              padding: 4px 8px;
-            ">
-              Close
-            </button>
-          </div>
-        </div>
-      `
-      document.body.appendChild(downloadNotification)
-
-      // Auto remove after 30 seconds with safe removal
-      setTimeout(() => {
-        safeRemoveElement(downloadNotificationId)
-      }, 30000)
-    }, 3000) // 3 seconds delay
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
@@ -341,21 +172,6 @@ export default function MoviePage({ params }: MoviePageProps) {
                     <Download className="mr-3 h-8 w-8 text-orange-400" />
                     <span className="text-orange-400">Download</span> <span className="text-teal-400 ml-2">Links</span>
                   </h2>
-
-                  {/* Updated Ads Notice */}
-                  <div className="mb-8 p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-400/30 rounded-xl">
-                    <div className="flex items-center mb-3">
-                      <span className="text-2xl mr-3">💡</span>
-                      <h3 className="text-white font-bold text-lg">Quick Download Instructions</h3>
-                    </div>
-                    <div className="text-white/80 text-sm space-y-2">
-                      <p>• Click on any download link below</p>
-                      <p>• Wait just 3 seconds for the ad to load</p>
-                      <p>• Close the ad tab to get your download link</p>
-                      <p>• Your movie download will start immediately</p>
-                    </div>
-                  </div>
-
                   <div className="space-y-6">
                     {movie.download_links.map((link: any, index: number) => (
                       <div
@@ -364,45 +180,26 @@ export default function MoviePage({ params }: MoviePageProps) {
                       >
                         <div className="flex justify-between items-center mb-4">
                           <h3 className="text-white font-bold text-xl">Download Link {index + 1}</h3>
-                          <div className="flex items-center space-x-2">
-                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 animate-pulse">
-                              Available
-                            </Badge>
-                            <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1">
-                              HD Quality
-                            </Badge>
-                            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1">
-                              Fast
-                            </Badge>
-                          </div>
+                          <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 animate-pulse">
+                            Available
+                          </Badge>
                         </div>
                         <Button
-                          className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white shadow-lg h-14 text-lg rounded-xl transition-all duration-300 hover:scale-105 relative overflow-hidden group"
-                          onClick={() => handleDownloadClick(link.url, index + 1)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white shadow-lg h-14 text-lg rounded-xl transition-all duration-300 hover:scale-105"
+                          onClick={() => window.open(link.url, "_blank")}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                           <Download className="mr-3 h-6 w-6" />
                           Download Link {index + 1}
-                          <span className="ml-2 text-sm opacity-80">(Quick Download)</span>
                         </Button>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-8 p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
-                    <div className="flex items-start space-x-3">
-                      <span className="text-green-400 text-xl">✨</span>
-                      <div>
-                        <p className="text-green-400 text-sm leading-relaxed">
-                          <strong>Fast & Safe:</strong> We've optimized the download process! Now you only need to wait
-                          3 seconds instead of 5. All downloads are virus-free and safe.
-                        </p>
-                        <p className="text-green-400/80 text-xs mt-2">
-                          Ads help us keep this service free and updated with the latest movies. Thank you for your
-                          support!
-                        </p>
-                      </div>
-                    </div>
+                  <div className="mt-8 p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                    <p className="text-yellow-400 text-sm leading-relaxed">
+                      <strong>Note:</strong> Please ensure you have a stable internet connection for downloading. All
+                      downloads are virus-free and safe. Click on any download link above to start downloading.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -412,7 +209,7 @@ export default function MoviePage({ params }: MoviePageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
+      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 mt-20 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">

@@ -80,7 +80,7 @@ export default function JoinPage() {
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               <span className="text-orange-400">Join</span> <span className="text-teal-400">Our Community</span>
             </h1>
-            <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto font-medium">
+            <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto">
               Connect with us and stay updated with the latest movies, exclusive content, and special offers!
             </p>
           </div>
@@ -90,24 +90,22 @@ export default function JoinPage() {
             {joinLinks.map((link, index) => (
               <Card
                 key={link.id}
-                className="bg-gradient-to-br from-white/15 to-white/5 border border-white/30 hover:border-orange-400/60 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 animate-fade-in-up"
+                className="bg-gradient-to-br from-white/10 to-transparent border border-white/20 hover:border-orange-400/50 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <CardContent className="p-8">
                   <div className="text-center space-y-6">
-                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center animate-pulse">
                       <ExternalLink className="h-8 w-8 text-white" />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-4 drop-shadow-lg text-shadow-lg">{link.title}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-4">{link.title}</h3>
 
-                    <p className="text-white leading-relaxed text-base font-semibold drop-shadow-md text-shadow-md">
-                      {link.description}
-                    </p>
+                    <p className="text-white/70 leading-relaxed text-base">{link.description}</p>
 
                     <Button
                       onClick={() => window.open(link.url, "_blank")}
-                      className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105 shadow-lg font-semibold"
+                      className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
                     >
                       <ExternalLink className="mr-2 h-5 w-5" />
                       Join Now
@@ -120,38 +118,32 @@ export default function JoinPage() {
 
           {/* Additional Info */}
           <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-            <Card className="bg-gradient-to-r from-orange-600/25 to-teal-600/25 border border-orange-400/40 backdrop-blur-sm shadow-2xl">
+            <Card className="bg-gradient-to-r from-orange-600/20 to-teal-600/20 border-orange-400/30 backdrop-blur-sm">
               <CardContent className="p-8">
-                <h3 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
+                <h3 className="text-2xl font-bold text-white mb-4">
                   <span className="text-orange-400">Why</span> <span className="text-teal-400">Join Us?</span>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-lg">1</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white/80">
+                  <div>
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">1</span>
                     </div>
-                    <h4 className="font-bold mb-2 text-orange-400 text-lg drop-shadow-md text-shadow-lg">
-                      Latest Updates
-                    </h4>
-                    <p className="text-white font-semibold drop-shadow-sm text-shadow-md">
-                      Get notified about new movie releases instantly
-                    </p>
+                    <h4 className="font-semibold mb-2 text-orange-400">Latest Updates</h4>
+                    <p className="text-sm">Get notified about new movie releases instantly</p>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-lg">2</span>
+                  <div>
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">2</span>
                     </div>
-                    <h4 className="font-bold mb-2 text-teal-400 text-lg drop-shadow-md">Exclusive Content</h4>
-                    <p className="text-white/95 font-medium drop-shadow-sm">
-                      Access to exclusive movies and special content
-                    </p>
+                    <h4 className="font-semibold mb-2 text-teal-400">Exclusive Content</h4>
+                    <p className="text-sm">Access to exclusive movies and special content</p>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-lg">3</span>
+                  <div>
+                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">3</span>
                     </div>
-                    <h4 className="font-bold mb-2 text-orange-400 text-lg drop-shadow-md">Community Support</h4>
-                    <p className="text-white/95 font-medium drop-shadow-sm">Join a community of movie enthusiasts</p>
+                    <h4 className="font-semibold mb-2 text-orange-400">Community Support</h4>
+                    <p className="text-sm">Join a community of movie enthusiasts</p>
                   </div>
                 </div>
               </CardContent>
@@ -161,7 +153,7 @@ export default function JoinPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
+      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 mt-16 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">
@@ -194,12 +186,6 @@ export default function JoinPage() {
       </footer>
 
       <style jsx global>{`
-        .text-shadow-lg {
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        .text-shadow-md {
-          text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 0, 0, 0.4);
-        }
         @keyframes gradient-x {
           0%, 100% {
             background-position: 0% 50%;

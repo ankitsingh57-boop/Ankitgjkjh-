@@ -8,7 +8,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import AdminPanel from "@/components/admin-panel"
-import SocialBarAds from "@/components/social-bar-ads"
 import { getMovies, type Movie } from "@/lib/supabase"
 
 const categories = ["All", "Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance"]
@@ -35,12 +34,12 @@ export default function HomePage() {
 
   const featuredMovies = movies.filter((movie) => movie.featured)
 
-  // Auto-rotate hero banner every 5 seconds with smooth transition
+  // Auto-rotate hero banner every 3 seconds with smooth transition
   useEffect(() => {
     if (featuredMovies.length > 1) {
       const interval = setInterval(() => {
         setCurrentHeroIndex((prev) => (prev + 1) % featuredMovies.length)
-      }, 5000) // Changed from 3000 to 5000
+      }, 3000)
       return () => clearInterval(interval)
     }
   }, [featuredMovies.length])
@@ -76,9 +75,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 animate-gradient-x">
-      {/* Social Bar Ads - Only on Home Page */}
-      <SocialBarAds />
-
       {/* Admin Panel */}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onDataChange={loadMovies} />}
 
@@ -180,8 +176,7 @@ export default function HomePage() {
                 alt={currentHeroMovie.title}
                 fill
                 className="object-cover"
-                priority={currentHeroIndex === 0} // Only first image gets priority
-                loading={currentHeroIndex === 0 ? "eager" : "lazy"}
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 to-transparent" />
@@ -281,9 +276,6 @@ export default function HomePage() {
                     alt={movie.title}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    loading="lazy"
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute top-3 right-3">
@@ -313,7 +305,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer with Gradient */}
-      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 backdrop-blur-sm">
+      <footer className="bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-t border-white/10 mt-16 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">
