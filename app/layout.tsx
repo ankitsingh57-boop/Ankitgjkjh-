@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Smart Saathi - Movie Download Website",
   description:
     "Your ultimate destination for the latest movies and entertainment content. Download high-quality movies with professional UI design.",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({
