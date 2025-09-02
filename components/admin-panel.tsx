@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { X, Plus, Edit, Trash2, Save, Eye, EyeOff } from "lucide-react"
+import { X, Plus, Edit, Trash2, Save, Eye, EyeOff, LogOut } from "lucide-react"
 import Image from "next/image"
 import {
   getMovies,
@@ -18,6 +18,14 @@ import {
   getJoinLinks,
   updateJoinLink,
   addJoinLink,
+  setMovieDownloads,
+  getMovieById,
+  signIn,
+  signOut,
+  signUp,
+  getCurrentUser,
+  isAdminEmail,
+  adminVerify,
   type Movie,
   type JoinLink,
 } from "@/lib/supabase"
@@ -41,13 +49,19 @@ const genreOptions = [
 ]
 
 export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
+  // Auth state
+  const [sessionChecked, setSessionChecked] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+
+  // UI state
   const [activeTab, setActiveTab] = useState("list")
   const [loading, setLoading] = useState(false)
 
-  // Movies state
+  // Data state
   const [movies, setMovies] = useState<Movie[]>([])
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null)
   const [formData, setFormData] = useState({
@@ -57,27 +71,31 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
     duration: "",
     selectedGenres: [] as string[],
     imageUrl: "",
+    trailerUrl: "",
     description: "",
     downloadLink1: "",
     downloadLink2: "",
     downloadLink3: "",
     featured: false,
   })
-
-  // Join Links state
   const [joinLinks, setJoinLinks] = useState<JoinLink[]>([])
   const [editingJoinLink, setEditingJoinLink] = useState<JoinLink | null>(null)
-  const [joinLinkForm, setJoinLinkForm] = useState({
-    title: "",
-    description: "",
-    url: "",
-  })
+  const [joinLinkForm, setJoinLinkForm] = useState({ title: "", description: "", url: "" })
 
+  // Check existing session
   useEffect(() => {
-    if (isAuthenticated) {
-      loadData()
-    }
-  }, [isAuthenticated])
+    ;(async () => {
+      const user = await getCurrentUser()
+      if (user?.email) {
+        const ok = await isAdminEmail(user.email)
+        if (ok) {
+          setIsAuthenticated(true)
+          await loadData()
+        }
+      }
+      setSessionChecked(true)
+    })()
+  }, [])
 
   const loadData = async () => {
     setLoading(true)
@@ -87,20 +105,59 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
     setLoading(false)
   }
 
-  const handleLogin = () => {
-    if (password === "ankit07") {
-      setIsAuthenticated(true)
-    } else {
-      alert("Incorrect password!")
+  const handleLogin = async () => {
+    setAuthError(null)
+    const emailTrim = email.trim()
+
+    // Try normal Auth sign-in first
+    const { error: signInErr } = await signIn(emailTrim, password)
+    if (signInErr) {
+      // Verify against admins table
+      const verified = await adminVerify(emailTrim, password)
+      if (!verified) {
+        setAuthError("Invalid credentials. Please try again.")
+        return
+      }
+      // If verified but no Auth user, create and sign in
+      const { error: signUpErr } = await signUp(emailTrim, password)
+      if (signUpErr) {
+        setAuthError(signUpErr.message || "Account creation failed. Check Supabase Auth settings.")
+        return
+      }
+      const { error: signInErr2 } = await signIn(emailTrim, password)
+      if (signInErr2) {
+        setAuthError(
+          "Account created. If email confirmation is enabled, please confirm the email in Supabase Auth and try again.",
+        )
+        return
+      }
     }
+
+    const user = await getCurrentUser()
+    if (!user?.email) {
+      setAuthError("Login failed. Please try again.")
+      return
+    }
+
+    const ok = await isAdminEmail(user.email)
+    if (!ok) {
+      setAuthError("Not authorized. Ask the owner to add your email to the admins table.")
+      return
+    }
+
+    setIsAuthenticated(true)
+    await loadData()
+  }
+
+  const handleLogout = async () => {
+    await signOut()
+    setIsAuthenticated(false)
+    setEmail("")
+    setPassword("")
   }
 
   const handleMovieSubmit = async () => {
     setLoading(true)
-    const downloadLinks = [formData.downloadLink1, formData.downloadLink2, formData.downloadLink3]
-      .filter((link) => link.trim() !== "")
-      .map((url) => ({ url }))
-
     const movieData = {
       title: formData.title,
       year: formData.year,
@@ -108,21 +165,20 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       duration: formData.duration,
       genre: formData.selectedGenres,
       image_url: formData.imageUrl,
+      trailer_url: formData.trailerUrl || null,
       description: formData.description,
-      download_links: downloadLinks,
       featured: formData.featured,
     }
 
-    let success = false
-    if (editingMovie) {
-      const result = await updateMovie(editingMovie.id, movieData)
-      success = !!result
-    } else {
-      const result = await addMovie(movieData)
-      success = !!result
+    let saved: Movie | null = null
+    if (editingMovie) saved = await updateMovie(editingMovie.id, movieData)
+    else saved = await addMovie(movieData as any)
+
+    if (saved?.id) {
+      await setMovieDownloads(saved.id, [formData.downloadLink1, formData.downloadLink2, formData.downloadLink3])
     }
 
-    if (success) {
+    if (saved) {
       resetForm()
       setActiveTab("list")
       await loadData()
@@ -130,6 +186,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
     } else {
       alert("Error saving movie. Please try again.")
     }
+
     setLoading(false)
   }
 
@@ -149,21 +206,10 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
   const handleJoinLinkSubmit = async () => {
     setLoading(true)
-    const linkData = {
-      title: joinLinkForm.title,
-      description: joinLinkForm.description,
-      url: joinLinkForm.url,
-    }
-
+    const linkData = { title: joinLinkForm.title, description: joinLinkForm.description, url: joinLinkForm.url }
     let success = false
-    if (editingJoinLink) {
-      const result = await updateJoinLink(editingJoinLink.id, linkData)
-      success = !!result
-    } else {
-      const result = await addJoinLink(linkData)
-      success = !!result
-    }
-
+    if (editingJoinLink) success = !!(await updateJoinLink(editingJoinLink.id, linkData))
+    else success = !!(await addJoinLink(linkData))
     if (success) {
       resetJoinLinkForm()
       await loadData()
@@ -181,6 +227,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       duration: "",
       selectedGenres: [],
       imageUrl: "",
+      trailerUrl: "",
       description: "",
       downloadLink1: "",
       downloadLink2: "",
@@ -191,16 +238,18 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
   }
 
   const resetJoinLinkForm = () => {
-    setJoinLinkForm({
-      title: "",
-      description: "",
-      url: "",
-    })
+    setJoinLinkForm({ title: "", description: "", url: "" })
     setEditingJoinLink(null)
   }
 
-  const handleEdit = (movie: Movie) => {
-    setEditingMovie(movie)
+  const handleEdit = async (movie: Movie) => {
+    const withDownloads = await getMovieById(movie.id)
+    const dls =
+      withDownloads?.movie_downloads && withDownloads.movie_downloads.length > 0
+        ? withDownloads.movie_downloads
+        : (withDownloads?.download_links || []).map((x, i) => ({ url: x.url, position: i + 1 }))
+
+    setEditingMovie(withDownloads || movie)
     setFormData({
       title: movie.title,
       year: movie.year,
@@ -208,33 +257,18 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       duration: movie.duration,
       selectedGenres: movie.genre,
       imageUrl: movie.image_url,
+      trailerUrl: (withDownloads?.trailer_url as string) || "",
       description: movie.description,
-      downloadLink1: movie.download_links[0]?.url || "",
-      downloadLink2: movie.download_links[1]?.url || "",
-      downloadLink3: movie.download_links[2]?.url || "",
+      downloadLink1: (dls as any)[0]?.url || "",
+      downloadLink2: (dls as any)[1]?.url || "",
+      downloadLink3: (dls as any)[2]?.url || "",
       featured: movie.featured,
     })
     setActiveTab("form")
   }
 
-  const handleEditJoinLink = (link: JoinLink) => {
-    setEditingJoinLink(link)
-    setJoinLinkForm({
-      title: link.title,
-      description: link.description,
-      url: link.url,
-    })
-  }
-
-  const handleGenreChange = (genre: string, checked: boolean) => {
-    if (checked) {
-      setFormData({ ...formData, selectedGenres: [...formData.selectedGenres, genre] })
-    } else {
-      setFormData({ ...formData, selectedGenres: formData.selectedGenres.filter((g) => g !== genre) })
-    }
-  }
-
-  if (!isAuthenticated) {
+  // AUTH SCREEN
+  if (!sessionChecked || !isAuthenticated) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-gradient-to-br from-purple-900 to-indigo-900 border-orange-400/30 shadow-2xl">
@@ -251,7 +285,18 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-white text-sm font-medium">Gmail</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-white/10 border-orange-400/30 text-white h-12 rounded-lg focus:border-teal-400"
+                placeholder="your-admin@gmail.com"
+                autoComplete="username"
+              />
+            </div>
             <div>
               <Label className="text-white text-sm font-medium">Password</Label>
               <div className="relative mt-2">
@@ -260,8 +305,8 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-orange-400/30 text-white pr-12 h-12 rounded-lg focus:border-teal-400"
-                  onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-                  placeholder="Enter admin password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
                 />
                 <Button
                   type="button"
@@ -269,23 +314,29 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-4 text-gray-400 hover:text-white"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
+            {authError && <p className="text-red-400 text-sm">{authError}</p>}
             <Button
               onClick={handleLogin}
-              className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 h-12 text-lg rounded-lg shadow-lg"
+              className="w-full bg-gradient-to-r from-orange-500 to-teal-500 h-12 text-lg rounded-lg shadow-lg"
             >
-              Login to Admin Panel
+              Login
             </Button>
+            <p className="text-xs text-white/60 pt-2">
+              Only Gmail added in the admins table can access. Passwords and Gmail are stored in Supabase (not in code).
+            </p>
           </CardContent>
         </Card>
       </div>
     )
   }
 
+  // MAIN ADMIN UI
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
       <div className="min-h-screen p-4">
@@ -298,9 +349,15 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 </div>
                 <CardTitle className="text-white text-2xl">Admin Panel</CardTitle>
               </div>
-              <Button onClick={onClose} variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                <X className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleLogout} variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+                <Button onClick={onClose} variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
             <div className="flex space-x-3 mt-4">
               <Button
@@ -352,53 +409,60 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
             {!loading && activeTab === "list" && (
               <div className="space-y-4">
-                {movies.map((movie) => (
-                  <div
-                    key={movie.id}
-                    className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-orange-400/30 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-20 rounded-lg overflow-hidden bg-gray-700">
-                          <img
-                            src={movie.image_url || "/placeholder.svg"}
-                            alt={movie.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-white font-bold text-lg">{movie.title}</h3>
-                          <p className="text-gray-400 text-sm">
-                            {movie.year} • {movie.rating} ⭐ {movie.featured && "• Featured"}
-                          </p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {movie.genre.map((g) => (
-                              <Badge
-                                key={g}
-                                className="bg-gradient-to-r from-orange-500/20 to-teal-500/20 text-white text-xs"
-                              >
-                                {g}
-                              </Badge>
-                            ))}
+                {movies.map((movie) => {
+                  const dlCount =
+                    (movie.movie_downloads && movie.movie_downloads.length) ||
+                    (movie.download_links && movie.download_links.length) ||
+                    0
+
+                  return (
+                    <div
+                      key={movie.id}
+                      className="bg-white/5 p-5 rounded-xl border border-white/10 hover:border-orange-400/30 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-20 rounded-lg overflow-hidden bg-gray-700">
+                            <img
+                              src={movie.image_url || "/placeholder.svg"}
+                              alt={movie.title}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                          <p className="text-gray-500 text-xs mt-1">{movie.download_links.length} download link(s)</p>
+                          <div>
+                            <h3 className="text-white font-bold text-lg">{movie.title}</h3>
+                            <p className="text-gray-400 text-sm">
+                              {movie.year} • {movie.rating} ⭐ {movie.featured && "• Featured"}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {movie.genre.map((g) => (
+                                <Badge
+                                  key={g}
+                                  className="bg-gradient-to-r from-orange-500/20 to-teal-500/20 text-white text-xs"
+                                >
+                                  {g}
+                                </Badge>
+                              ))}
+                            </div>
+                            <p className="text-gray-500 text-xs mt-1">{dlCount} download link(s)</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => handleEdit(movie)}
-                          size="sm"
-                          className="bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button onClick={() => handleDeleteMovie(movie.id)} size="sm" variant="destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => handleEdit(movie)}
+                            size="sm"
+                            className="bg-gradient-to-r from-orange-500 to-teal-500"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button onClick={() => handleDeleteMovie(movie.id)} size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
@@ -455,22 +519,13 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 </div>
 
                 <div>
-                  <Label className="text-white font-medium mb-4 block">Genres</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {genreOptions.map((genre) => (
-                      <div key={genre} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={genre}
-                          checked={formData.selectedGenres.includes(genre)}
-                          onCheckedChange={(checked) => handleGenreChange(genre, checked as boolean)}
-                          className="border-orange-400/30"
-                        />
-                        <Label htmlFor={genre} className="text-white">
-                          {genre}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  <Label className="text-white font-medium mb-3 block">Trailer URL (optional)</Label>
+                  <Input
+                    value={formData.trailerUrl}
+                    onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                    className="bg-white/10 border-orange-400/30 text-white h-12 focus:border-teal-400"
+                    placeholder="YouTube/Vimeo/MP4 link"
+                  />
                 </div>
 
                 <div>
@@ -488,7 +543,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   <Label className="text-white font-medium mb-4 block">Download Links</Label>
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-gray-300 text-sm">Download Link 1 (Required)</Label>
+                      <Label className="text-gray-300 text-sm">Download Link 1 (Optional)</Label>
                       <Input
                         value={formData.downloadLink1}
                         onChange={(e) => setFormData({ ...formData, downloadLink1: e.target.value })}
@@ -532,7 +587,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 <Button
                   onClick={handleMovieSubmit}
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 h-14 text-lg rounded-lg shadow-lg"
+                  className="w-full bg-gradient-to-r from-orange-500 to-teal-500 h-14 text-lg rounded-lg shadow-lg"
                 >
                   <Save className="h-5 w-5 mr-2" />
                   {editingMovie ? "Update Movie" : "Add Movie"}
@@ -543,8 +598,6 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
             {!loading && activeTab === "join-links" && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-white mb-4">Manage Join Links</h3>
-
-                {/* Join Links List */}
                 <div className="space-y-4 mb-8">
                   {joinLinks.map((link) => (
                     <div
@@ -558,9 +611,12 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                           <p className="text-teal-400 text-xs">{link.url}</p>
                         </div>
                         <Button
-                          onClick={() => handleEditJoinLink(link)}
+                          onClick={() => {
+                            setEditingJoinLink(link)
+                            setJoinLinkForm({ title: link.title, description: link.description, url: link.url })
+                          }}
                           size="sm"
-                          className="bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 ml-4"
+                          className="bg-gradient-to-r from-orange-500 to-teal-500 ml-4"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -569,7 +625,6 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   ))}
                 </div>
 
-                {/* Join Link Form */}
                 <div className="bg-white/5 p-6 rounded-xl border border-white/10">
                   <h4 className="text-white font-bold text-lg mb-4">
                     {editingJoinLink ? "Edit Join Link" : "Add New Join Link"}
@@ -611,7 +666,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                       <Button
                         onClick={handleJoinLinkSubmit}
                         disabled={loading}
-                        className="bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 flex-1"
+                        className="bg-gradient-to-r from-orange-500 to-teal-500 flex-1"
                       >
                         <Save className="h-4 w-4 mr-2" />
                         {editingJoinLink ? "Update Link" : "Add Link"}
