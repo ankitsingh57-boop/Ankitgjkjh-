@@ -6,33 +6,29 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Star, Play, Settings, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import AdminPanel from "@/components/admin-panel"
-import { getMovies, type Movie } from "@/lib/supabase"
+import { getMoviesPaged, getFeaturedMovies, type Movie } from "@/lib/supabase"
 
 const categories = ["All", "Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance"]
 
 export default function HomePage() {
   const [movies, setMovies] = useState<Movie[]>([])
+  const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdmin, setShowAdmin] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 40
+  const [totalMovies, setTotalMovies] = useState(0)
+
+  const totalPages = Math.max(1, Math.ceil(totalMovies / pageSize))
+
+  // Hero rotation
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0)
-
-  useEffect(() => {
-    loadMovies()
-  }, [])
-
-  const loadMovies = async () => {
-    setLoading(true)
-    const moviesData = await getMovies()
-    setMovies(moviesData)
-    setLoading(false)
-  }
-
-  const featuredMovies = useMemo(() => movies.filter((movie) => movie.featured), [movies])
-
   useEffect(() => {
     if (featuredMovies.length > 1) {
       const interval = setInterval(() => {
@@ -42,16 +38,48 @@ export default function HomePage() {
     }
   }, [featuredMovies.length])
 
-  const filteredMovies = movies.filter((movie) => {
-    const matchesSearch = movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || movie.genre.includes(selectedCategory)
-    return matchesSearch && matchesCategory
-  })
+  // Load movies for current page/filter/search
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      const [pageData, featured] = await Promise.all([
+        getMoviesPaged({ page: currentPage, pageSize, search: searchTerm, category: selectedCategory }),
+        getFeaturedMovies(5),
+      ])
+      setMovies(pageData.items)
+      setTotalMovies(pageData.total)
+      setFeaturedMovies(featured)
+      setLoading(false)
+    }
+    load()
+  }, [currentPage, searchTerm, selectedCategory])
 
-  const nextHero = () => setCurrentHeroIndex((p) => (p + 1) % featuredMovies.length)
-  const prevHero = () => setCurrentHeroIndex((p) => (p - 1 + featuredMovies.length) % featuredMovies.length)
+  // Reset to page 1 on filter/search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedCategory])
 
+  const nextHero = () => setCurrentHeroIndex((p) => (p + 1) % Math.max(featuredMovies.length, 1))
+  const prevHero = () =>
+    setCurrentHeroIndex((p) => (p - 1 + Math.max(featuredMovies.length, 1)) % Math.max(featuredMovies.length, 1))
   const currentHeroMovie = featuredMovies[currentHeroIndex]
+
+  const renderPageNumbers = () => {
+    const pages: (number | string)[] = []
+    const maxToShow = 7
+    if (totalPages <= maxToShow) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      const start = Math.max(2, currentPage - 1)
+      const end = Math.min(totalPages - 1, currentPage + 1)
+      pages.push(1)
+      if (start > 2) pages.push("...")
+      for (let i = start; i <= end; i++) pages.push(i)
+      if (end < totalPages - 1) pages.push("...")
+      pages.push(totalPages)
+    }
+    return pages
+  }
 
   if (loading) {
     return (
@@ -68,7 +96,15 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onDataChange={loadMovies} />}
+      {showAdmin && (
+        <AdminPanel
+          onClose={() => setShowAdmin(false)}
+          onDataChange={() => {
+            // refresh current page after admin changes
+            setCurrentPage(1)
+          }}
+        />
+      )}
 
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-40 will-change-transform">
         <div className="container mx-auto px-4 py-3">
@@ -239,7 +275,7 @@ export default function HomePage() {
           <span className="text-orange-400">All</span> <span className="text-teal-400">Movies</span>
         </h2>
         <div className="grid grid-cols-2 gap-4 md:gap-6">
-          {filteredMovies.map((movie) => (
+          {movies.map((movie) => (
             <Link key={movie.id} href={`/movie/${movie.id}`}>
               <div className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-transform hover:scale-[1.01]">
                 <div className="relative aspect-[3/4.5] overflow-hidden">
@@ -273,6 +309,51 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+
+        {/* Pagination */}
+        <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10 bg-transparent"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
+            Previous
+          </Button>
+          {renderPageNumbers().map((p, idx) =>
+            typeof p === "number" ? (
+              <Button
+                key={`${p}-${idx}`}
+                size="sm"
+                onClick={() => setCurrentPage(p)}
+                className={
+                  p === currentPage
+                    ? "bg-gradient-to-r from-orange-500 to-teal-500 text-white"
+                    : "bg-gray-800/50 border border-gray-600/50 text-white hover:bg-white/10"
+                }
+              >
+                {p}
+              </Button>
+            ) : (
+              <span key={`dots-${idx}`} className="px-2 text-white/60">
+                {p}
+              </span>
+            ),
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/20 text-white hover:bg-white/10 bg-transparent"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
+        <p className="text-center text-white/60 text-xs mt-2">
+          Page {currentPage} of {totalPages} • {totalMovies} movies
+        </p>
       </section>
 
       {/* Footer */}

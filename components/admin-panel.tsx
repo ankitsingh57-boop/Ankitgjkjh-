@@ -20,11 +20,6 @@ import {
   addJoinLink,
   setMovieDownloads,
   getMovieById,
-  signIn,
-  signOut,
-  signUp,
-  getCurrentUser,
-  isAdminEmail,
   adminVerify,
   type Movie,
   type JoinLink,
@@ -35,21 +30,8 @@ interface AdminPanelProps {
   onDataChange: () => void
 }
 
-const genreOptions = [
-  "Action",
-  "Adventure",
-  "Comedy",
-  "Drama",
-  "Thriller",
-  "Romance",
-  "Sci-Fi",
-  "Crime",
-  "Horror",
-  "Fantasy",
-]
-
 export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
-  // Auth state
+  // App-level "session" (localStorage only)
   const [sessionChecked, setSessionChecked] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
@@ -82,19 +64,19 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
   const [editingJoinLink, setEditingJoinLink] = useState<JoinLink | null>(null)
   const [joinLinkForm, setJoinLinkForm] = useState({ title: "", description: "", url: "" })
 
-  // Check existing session
+  // Check "session" from localStorage
   useEffect(() => {
-    ;(async () => {
-      const user = await getCurrentUser()
-      if (user?.email) {
-        const ok = await isAdminEmail(user.email)
-        if (ok) {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem("ss_admin") : null
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.email) {
           setIsAuthenticated(true)
-          await loadData()
+          void loadData()
         }
-      }
-      setSessionChecked(true)
-    })()
+      } catch {}
+    }
+    setSessionChecked(true)
   }, [])
 
   const loadData = async () => {
@@ -107,50 +89,23 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
   const handleLogin = async () => {
     setAuthError(null)
-    const emailTrim = email.trim()
-
-    // Try normal Auth sign-in first
-    const { error: signInErr } = await signIn(emailTrim, password)
-    if (signInErr) {
-      // Verify against admins table
-      const verified = await adminVerify(emailTrim, password)
-      if (!verified) {
-        setAuthError("Invalid credentials. Please try again.")
-        return
-      }
-      // If verified but no Auth user, create and sign in
-      const { error: signUpErr } = await signUp(emailTrim, password)
-      if (signUpErr) {
-        setAuthError(signUpErr.message || "Account creation failed. Check Supabase Auth settings.")
-        return
-      }
-      const { error: signInErr2 } = await signIn(emailTrim, password)
-      if (signInErr2) {
-        setAuthError(
-          "Account created. If email confirmation is enabled, please confirm the email in Supabase Auth and try again.",
-        )
-        return
-      }
-    }
-
-    const user = await getCurrentUser()
-    if (!user?.email) {
-      setAuthError("Login failed. Please try again.")
-      return
-    }
-
-    const ok = await isAdminEmail(user.email)
+    const ok = await adminVerify(email.trim(), password)
     if (!ok) {
-      setAuthError("Not authorized. Ask the owner to add your email to the admins table.")
+      setAuthError("Invalid Gmail or password. Please try again.")
       return
     }
-
+    // Save "session"
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("ss_admin", JSON.stringify({ email: email.trim(), t: Date.now() }))
+    }
     setIsAuthenticated(true)
     await loadData()
   }
 
   const handleLogout = async () => {
-    await signOut()
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("ss_admin")
+    }
     setIsAuthenticated(false)
     setEmail("")
     setPassword("")
@@ -293,7 +248,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white/10 border-orange-400/30 text-white h-12 rounded-lg focus:border-teal-400"
-                placeholder="your-admin@gmail.com"
+                placeholder="admin@gmail.com"
                 autoComplete="username"
               />
             </div>
@@ -327,9 +282,6 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
             >
               Login
             </Button>
-            <p className="text-xs text-white/60 pt-2">
-              Only Gmail added in the admins table can access. Passwords and Gmail are stored in Supabase (not in code).
-            </p>
           </CardContent>
         </Card>
       </div>
@@ -519,7 +471,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 </div>
 
                 <div>
-                  <Label className="text-white font-medium mb-3 block">Trailer URL (optional)</Label>
+                  <Label className="text-white font-medium">Trailer URL (optional)</Label>
                   <Input
                     value={formData.trailerUrl}
                     onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}

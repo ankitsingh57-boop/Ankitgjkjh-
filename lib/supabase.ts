@@ -43,29 +43,10 @@ export interface JoinLink {
   updated_at: string
 }
 
-// Auth helpers
-export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password })
-}
-export async function signUp(email: string, password: string) {
-  return supabase.auth.signUp({ email, password })
-}
-export async function signOut() {
-  return supabase.auth.signOut()
-}
-export async function getCurrentUser() {
-  const { data } = await supabase.auth.getUser()
-  return data.user
-}
-
-// Admin allow-list (by email)
-export async function isAdminEmail(email: string): Promise<boolean> {
-  const { data, error } = await supabase.from("admins").select("email").eq("email", email).maybeSingle()
-  if (error) return false
-  return !!data
-}
-
-// Admin password verification (RPC against admins.password_hash)
+/**
+ * Admin password verification using DB-only table (no Supabase Auth).
+ * Returns true if email/password are correct.
+ */
 export async function adminVerify(email: string, password: string): Promise<boolean> {
   const { data, error } = await supabase.rpc("admin_verify", { p_email: email, p_plain_password: password })
   if (error) {
@@ -75,7 +56,7 @@ export async function adminVerify(email: string, password: string): Promise<bool
   return !!data
 }
 
-// Movies
+// Movies (legacy full fetch)
 export async function getMovies(): Promise<Movie[]> {
   const { data, error } = await supabase.from("movies").select("*").order("created_at", { ascending: false })
   if (error) {
@@ -83,6 +64,60 @@ export async function getMovies(): Promise<Movie[]> {
     return []
   }
   return data || []
+}
+
+// Paged movies with search and category filters
+export interface GetMoviesPagedParams {
+  page?: number
+  pageSize?: number
+  search?: string
+  category?: string // "All" or a specific genre
+}
+export interface MoviesPage {
+  items: Movie[]
+  total: number
+  page: number
+  pageSize: number
+}
+export async function getMoviesPaged(params: GetMoviesPagedParams = {}): Promise<MoviesPage> {
+  const page = Math.max(1, params.page ?? 1)
+  const pageSize = Math.max(1, params.pageSize ?? 40)
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  let query = supabase.from("movies").select("*", { count: "exact" })
+
+  if (params.search && params.search.trim().length > 0) {
+    query = query.ilike("title", `%${params.search.trim()}%`)
+  }
+
+  if (params.category && params.category !== "All") {
+    // genre is text[]; contains expects an array
+    query = query.contains("genre", [params.category])
+  }
+
+  const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to)
+
+  if (error) {
+    console.error("Error fetching paged movies:", error)
+    return { items: [], total: 0, page, pageSize }
+  }
+
+  return { items: (data || []) as Movie[], total: count ?? 0, page, pageSize }
+}
+
+// Featured movies (for hero)
+export async function getFeaturedMovies(limit = 5): Promise<Movie[]> {
+  const { data, error } = await supabase
+    .from("movies")
+    .select("*")
+    .eq("featured", true)
+    .order("created_at", { ascending: false })
+  if (error) {
+    console.error("Error fetching featured movies:", error)
+    return []
+  }
+  return (data || []).slice(0, Math.max(1, limit))
 }
 
 export async function getMovieById(id: number): Promise<Movie | null> {
