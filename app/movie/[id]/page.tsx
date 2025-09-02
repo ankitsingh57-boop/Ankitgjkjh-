@@ -157,12 +157,15 @@ export default function MoviePage({ params }: MoviePageProps) {
             {/* Description */}
             {movie.description && (
               <div style={{ contentVisibility: "auto" }}>
-                <Card className="bg-gradient-to-br from-white/10 to-transparent border-white/10 backdrop-blur-sm shadow-2xl">
+                <Card
+                  className="border-white/20 backdrop-blur-md shadow-2xl"
+                  style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
+                >
                   <CardContent className="p-6 sm:p-8">
                     <h2 className="text-2xl font-bold text-white mb-4">
                       <span className="text-orange-400">Movie</span> <span className="text-teal-400">Description</span>
                     </h2>
-                    <p className="text-white/80 leading-relaxed whitespace-pre-line">{movie.description}</p>
+                    <p className="text-white/90 leading-relaxed whitespace-pre-line">{movie.description}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -170,7 +173,10 @@ export default function MoviePage({ params }: MoviePageProps) {
 
             {/* Download Section */}
             <div style={{ contentVisibility: "auto" }}>
-              <Card className="bg-gradient-to-br from-orange-600/20 to-teal-600/20 border-orange-400/30 backdrop-blur-sm shadow-2xl">
+              <Card
+                className="bg-gradient-to-br from-orange-600/20 to-teal-600/20 border-orange-400/30 backdrop-blur-sm shadow-2xl"
+                style={{ backgroundColor: "rgba(0, 0, 0, 0.35)" }}
+              >
                 <CardContent className="p-6 sm:p-8">
                   <h2 className="text-3xl font-bold text-white mb-6 sm:mb-8 flex items-center">
                     <Download className="mr-3 h-8 w-8 text-orange-400" />

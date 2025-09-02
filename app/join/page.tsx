@@ -80,7 +80,7 @@ export default function JoinPage() {
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               <span className="text-orange-400">Join</span> <span className="text-teal-400">Our Community</span>
             </h1>
-            <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="text-white/95 text-lg md:text-xl max-w-2xl mx-auto">
               Connect with us and stay updated with the latest movies, exclusive content, and special offers!
             </p>
           </div>
@@ -90,8 +90,8 @@ export default function JoinPage() {
             {joinLinks.map((link, index) => (
               <Card
                 key={link.id}
-                className="bg-gradient-to-br from-black/40 to-black/20 border border-white/20 hover:border-orange-400/60 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="border border-white/20 hover:border-orange-400/60 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 animate-fade-in-up"
+                style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", animationDelay: `${index * 0.2}s` }}
               >
                 <CardContent className="p-8">
                   <div className="text-center space-y-6">
@@ -118,7 +118,7 @@ export default function JoinPage() {
 
           {/* Additional Info */}
           <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-            <Card className="bg-gradient-to-r from-black/40 to-black/20 border border-white/20 backdrop-blur-sm">
+            <Card className="border border-white/20 backdrop-blur-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}>
               <CardContent className="p-8">
                 <h3 className="text-2xl font-bold text-white mb-4">
                   <span className="text-orange-400">Why</span> <span className="text-teal-400">Join Us?</span>
