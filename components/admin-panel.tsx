@@ -22,6 +22,7 @@ import {
   getMovieById,
   adminVerify,
   getGenres,
+  clearCache,
   type Movie,
   type JoinLink,
 } from "@/lib/supabase"
@@ -146,6 +147,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       setActiveTab("list")
       await loadData()
       onDataChange()
+      clearCache()
     } else {
       alert("Error saving movie. Please try again.")
     }
@@ -160,6 +162,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       if (success) {
         await loadData()
         onDataChange()
+        clearCache()
       } else {
         alert("Error deleting movie. Please try again.")
       }
@@ -176,6 +179,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
     if (success) {
       resetJoinLinkForm()
       await loadData()
+      clearCache("join:")
     } else {
       alert("Error saving join link. Please try again.")
     }

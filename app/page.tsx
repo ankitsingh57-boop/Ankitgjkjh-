@@ -2,20 +2,34 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, Star, Play, Settings, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Play, Settings, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
-import AdminPanel from "@/components/admin-panel"
+import { useEffect, useRef, useState, useTransition } from "react"
+import dynamic from "next/dynamic"
 import { getMoviesPaged, getFeaturedMovies, getGenres, type Movie } from "@/lib/supabase"
 
+// Code-split heavy components
+const AdminPanel = dynamic(() => import("@/components/admin-panel"), { ssr: false })
+const MovieCard = dynamic(() => import("@/components/movie-card"), { ssr: false })
+
 export default function HomePage() {
+  // Data
   const [movies, setMovies] = useState<Movie[]>([])
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // Loading states
+  const [initialLoading, setInitialLoading] = useState(true) // only for first paint
+  const [listLoading, setListLoading] = useState(false) // for subsequent searches/paging without wiping UI
+
+  // Admin panel
   const [showAdmin, setShowAdmin] = useState(false)
+
+  // Search with debounce
+  const [searchInput, setSearchInput] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+
+  // Categories (dynamic)
   const [categories, setCategories] = useState<string[]>(["All"])
   const [selectedCategory, setSelectedCategory] = useState("All")
 
@@ -36,7 +50,7 @@ export default function HomePage() {
     }
   }, [featuredMovies.length])
 
-  // Load genres for categories
+  // Fetch genres once
   useEffect(() => {
     ;(async () => {
       const names = await getGenres()
@@ -44,26 +58,58 @@ export default function HomePage() {
     })()
   }, [])
 
-  // Load movies for current page/filter/search
+  // Fetch featured movies once (not on every search)
   useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      const [pageData, featured] = await Promise.all([
-        getMoviesPaged({ page: currentPage, pageSize, search: searchTerm, category: selectedCategory }),
-        getFeaturedMovies(5),
-      ])
+    ;(async () => {
+      const featured = await getFeaturedMovies(5)
+      setFeaturedMovies(featured)
+    })()
+  }, [])
+
+  // Debounce search input -> commit to searchTerm
+  useEffect(() => {
+    const id = setTimeout(() => setSearchTerm(searchInput.trim()), 300)
+    return () => clearTimeout(id)
+  }, [searchInput])
+
+  // Reset to page 1 when searchTerm (debounced) or category changes
+  const [isPending, startTransition] = useTransition()
+  useEffect(() => {
+    startTransition(() => setCurrentPage(1))
+  }, [searchTerm, selectedCategory])
+
+  // Guard against stale responses for fast typing/paging
+  const requestIdRef = useRef(0)
+
+  // Fetch paged movies
+  useEffect(() => {
+    const reqId = ++requestIdRef.current
+    const fetchMovies = async () => {
+      // Show initial full-screen loader only before the first data arrives
+      if (initialLoading) {
+        setInitialLoading(true)
+      } else {
+        setListLoading(true)
+      }
+
+      const pageData = await getMoviesPaged({
+        page: currentPage,
+        pageSize,
+        search: searchTerm,
+        category: selectedCategory,
+      })
+
+      // Ignore stale responses
+      if (requestIdRef.current !== reqId) return
+
       setMovies(pageData.items)
       setTotalMovies(pageData.total)
-      setFeaturedMovies(featured)
-      setLoading(false)
+      setInitialLoading(false)
+      setListLoading(false)
     }
-    load()
-  }, [currentPage, searchTerm, selectedCategory])
 
-  // Reset to page 1 on filter/search change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, selectedCategory])
+    fetchMovies()
+  }, [currentPage, searchTerm, selectedCategory]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const nextHero = () => setCurrentHeroIndex((p) => (p + 1) % Math.max(featuredMovies.length, 1))
   const prevHero = () =>
@@ -87,7 +133,8 @@ export default function HomePage() {
     return pages
   }
 
-  if (loading) {
+  // Only block the very first load
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
@@ -106,7 +153,8 @@ export default function HomePage() {
         <AdminPanel
           onClose={() => setShowAdmin(false)}
           onDataChange={() => {
-            setCurrentPage(1)
+            // Refresh current listing after admin edits
+            startTransition(() => setCurrentPage(1))
           }}
         />
       )}
@@ -149,12 +197,12 @@ export default function HomePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 h-4 w-4" />
                 <Input
                   placeholder="Search movies..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-10 bg-white/10 border-orange-400/30 text-white placeholder:text-white/50 w-48 h-8 rounded-full focus:border-teal-400 transition-colors"
                 />
               </div>
-              <Link href="/join">
+              <Link href="/join" prefetch={false}>
                 <Button
                   size="sm"
                   className="bg-gradient-to-r from-teal-500 to-orange-500 text-white px-4 py-2 rounded-full"
@@ -178,8 +226,8 @@ export default function HomePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 h-4 w-4" />
               <Input
                 placeholder="Search movies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10 bg-white/10 border-orange-400/30 text-white placeholder:text-white/50 w-full h-8 rounded-full focus:border-teal-400 transition-colors"
               />
             </div>
@@ -190,7 +238,7 @@ export default function HomePage() {
       {/* Hero */}
       {currentHeroMovie && (
         <section className="relative h-[42vh] md:h-[54vh] overflow-hidden" style={{ contentVisibility: "auto" }}>
-          <Link href={`/movie/${currentHeroMovie.id}`} className="block h-full">
+          <Link href={`/movie/${currentHeroMovie.id}`} className="block h-full" prefetch={false}>
             <div className="absolute inset-0 transition-transform duration-1000 ease-in-out transform hover:scale-105 will-change-transform">
               <Image
                 src={currentHeroMovie.image_url || "/placeholder.svg"}
@@ -260,7 +308,7 @@ export default function HomePage() {
           {categories.map((category) => (
             <Button
               key={category}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => startTransition(() => setSelectedCategory(category))}
               size="sm"
               className={`transition-transform hover:scale-105 px-3 py-1 text-xs rounded-full ${
                 category === selectedCategory
@@ -279,38 +327,19 @@ export default function HomePage() {
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
           <span className="text-orange-400">All</span> <span className="text-teal-400">Movies</span>
         </h2>
+
+        {/* Small inline loader on top of the grid to avoid “cut” */}
+        {listLoading && (
+          <div className="flex items-center gap-2 text-white/80 mb-4">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-400 to-teal-400 animate-pulse" />
+            <span className="text-sm">Updating results...</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4 md:gap-6">
           {movies.map((movie) => (
-            <Link key={movie.id} href={`/movie/${movie.id}`}>
-              <div className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-transform hover:scale-[1.01]">
-                <div className="relative aspect-[3/4.5] overflow-hidden">
-                  <Image
-                    src={movie.image_url || "/placeholder.svg"}
-                    alt={movie.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700 will-change-transform"
-                    sizes="(max-width: 768px) 50vw, 20vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold text-xs">
-                      <Star className="w-3 h-3 mr-1" />
-                      {movie.rating}
-                    </Badge>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-3 rounded-full shadow-xl">
-                      <Play className="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-900/20 to-transparent">
-                  <h3 className="text-white font-bold text-sm md:text-base group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
-                    {movie.title}
-                  </h3>
-                  <p className="text-teal-300 text-xs md:text-sm font-medium">{movie.year}</p>
-                </div>
-              </div>
+            <Link key={movie.id} href={`/movie/${movie.id}`} prefetch={false}>
+              <MovieCard movie={movie} />
             </Link>
           ))}
         </div>
@@ -321,8 +350,8 @@ export default function HomePage() {
             size="sm"
             variant="outline"
             className="border-white/20 text-white hover:bg-white/10 bg-transparent"
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1 || listLoading}
+            onClick={() => startTransition(() => setCurrentPage((p) => Math.max(1, p - 1)))}
           >
             Previous
           </Button>
@@ -331,7 +360,8 @@ export default function HomePage() {
               <Button
                 key={`${p}-${idx}`}
                 size="sm"
-                onClick={() => setCurrentPage(p)}
+                disabled={listLoading}
+                onClick={() => startTransition(() => setCurrentPage(p))}
                 className={
                   p === currentPage
                     ? "bg-gradient-to-r from-orange-500 to-teal-500 text-white"
@@ -350,8 +380,8 @@ export default function HomePage() {
             size="sm"
             variant="outline"
             className="border-white/20 text-white hover:bg-white/10 bg-transparent"
-            disabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages || listLoading}
+            onClick={() => startTransition(() => setCurrentPage((p) => Math.min(totalPages, p + 1)))}
           >
             Next
           </Button>

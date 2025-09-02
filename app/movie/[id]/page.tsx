@@ -8,7 +8,9 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getMovieById, type Movie } from "@/lib/supabase"
-import TrailerPlayer from "@/components/trailer-player"
+import dynamic from "next/dynamic"
+
+const TrailerPlayer = dynamic(() => import("@/components/trailer-player"), { ssr: false })
 
 interface MoviePageProps {
   params: { id: string }

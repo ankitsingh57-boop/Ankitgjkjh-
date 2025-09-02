@@ -6,6 +6,33 @@ const supabaseAnonKey =
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+/* -------------------- Lightweight client-side cache -------------------- */
+type CacheEntry<T> = { data: T; ts: number }
+const cache = new Map<string, CacheEntry<any>>()
+const TTL = 30_000 // 30s keeps UI snappy but avoids long stale data
+
+function getCache<T>(key: string): T | null {
+  const e = cache.get(key)
+  if (!e) return null
+  if (Date.now() - e.ts > TTL) {
+    cache.delete(key)
+    return null
+  }
+  return e.data as T
+}
+function setCache<T>(key: string, data: T) {
+  cache.set(key, { data, ts: Date.now() })
+}
+export function clearCache(prefix?: string) {
+  if (!prefix) cache.clear()
+  else {
+    for (const k of cache.keys()) {
+      if (k.startsWith(prefix)) cache.delete(k)
+    }
+  }
+}
+
+/* -------------------- Types -------------------- */
 export interface MovieDownload {
   id?: number
   movie_id?: number
@@ -28,9 +55,7 @@ export interface Movie {
   trailer_url?: string | null
   created_at: string
   updated_at: string
-  // Legacy JSONB compatibility
   download_links?: Array<{ url: string }>
-  // Unified list for UI
   movie_downloads?: MovieDownload[]
 }
 
@@ -48,10 +73,7 @@ export interface Genre {
   name: string
 }
 
-/**
- * Admin password verification using DB-only table (no Supabase Auth).
- * Returns true if email/password are correct.
- */
+/* -------------------- Admin verify (unchanged) -------------------- */
 export async function adminVerify(email: string, password: string): Promise<boolean> {
   const { data, error } = await supabase.rpc("admin_verify", { p_email: email, p_plain_password: password })
   if (error) {
@@ -61,7 +83,7 @@ export async function adminVerify(email: string, password: string): Promise<bool
   return !!data
 }
 
-// Default genres used as fallback if genres table is missing/empty
+/* -------------------- Genres -------------------- */
 const DEFAULT_GENRES = ["Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance", "Horror"]
 
 export async function getGenres(): Promise<string[]> {
@@ -69,27 +91,15 @@ export async function getGenres(): Promise<string[]> {
     const { data, error } = await supabase.from("genres").select("name").order("name", { ascending: true })
     if (error) throw error
     const names = (data || []).map((g: any) => g.name).filter(Boolean)
-    // Ensure at least one genre exists; include Horror if missing
     const merged = Array.from(new Set([...(names.length ? names : DEFAULT_GENRES)]))
     if (!merged.includes("Horror")) merged.push("Horror")
     return merged
-  } catch (err: any) {
-    // relation might not exist -> fallback
+  } catch {
     return DEFAULT_GENRES
   }
 }
 
-// Movies (legacy full fetch, still used in Admin Panel list)
-export async function getMovies(): Promise<Movie[]> {
-  const { data, error } = await supabase.from("movies").select("*").order("created_at", { ascending: false })
-  if (error) {
-    console.error("Error fetching movies:", error)
-    return []
-  }
-  return data || []
-}
-
-// Paged movies with search and category filters
+/* -------------------- Movies list with paging -------------------- */
 export interface GetMoviesPagedParams {
   page?: number
   pageSize?: number
@@ -105,6 +115,11 @@ export interface MoviesPage {
 export async function getMoviesPaged(params: GetMoviesPagedParams = {}): Promise<MoviesPage> {
   const page = Math.max(1, params.page ?? 1)
   const pageSize = Math.max(1, params.pageSize ?? 40)
+
+  const key = `movies:${page}:${pageSize}:${params.search ?? ""}:${params.category ?? ""}`
+  const cached = getCache<MoviesPage>(key)
+  if (cached) return cached
+
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
@@ -115,7 +130,6 @@ export async function getMoviesPaged(params: GetMoviesPagedParams = {}): Promise
   }
 
   if (params.category && params.category !== "All") {
-    // genre is text[]; contains expects an array
     query = query.contains("genre", [params.category])
   }
 
@@ -126,31 +140,55 @@ export async function getMoviesPaged(params: GetMoviesPagedParams = {}): Promise
     return { items: [], total: 0, page, pageSize }
   }
 
-  return { items: (data || []) as Movie[], total: count ?? 0, page, pageSize }
+  const value = { items: (data || []) as Movie[], total: count ?? 0, page, pageSize }
+  setCache(key, value)
+  return value
 }
 
-// Featured movies (for hero)
+/* -------------------- Featured -------------------- */
 export async function getFeaturedMovies(limit = 5): Promise<Movie[]> {
+  const key = `featured:${limit}`
+  const cached = getCache<Movie[]>(key)
+  if (cached) return cached
+
   const { data, error } = await supabase
     .from("movies")
     .select("*")
     .eq("featured", true)
     .order("created_at", { ascending: false })
+
   if (error) {
     console.error("Error fetching featured movies:", error)
     return []
   }
-  return (data || []).slice(0, Math.max(1, limit))
+  const items = (data || []).slice(0, Math.max(1, limit)) as Movie[]
+  setCache(key, items)
+  return items
 }
 
+/* -------------------- Admin list (used in panel) -------------------- */
+export async function getMovies(): Promise<Movie[]> {
+  const { data, error } = await supabase.from("movies").select("*").order("created_at", { ascending: false })
+  if (error) {
+    console.error("Error fetching movies:", error)
+    return []
+  }
+  return data || []
+}
+
+/* -------------------- Movie detail -------------------- */
 export async function getMovieById(id: number): Promise<Movie | null> {
+  const key = `movie:${id}`
+  const cached = getCache<Movie | null>(key)
+  if (cached !== null && cached !== undefined) return cached
+
   const { data: movie, error: movieErr } = await supabase.from("movies").select("*").eq("id", id).single()
   if (movieErr || !movie) {
     console.error("Error fetching movie:", movieErr)
+    setCache(key, null)
     return null
   }
 
-  // Try normalized table first
   let tableDownloads: MovieDownload[] = []
   const { data: dls, error: dlErr } = await supabase
     .from("movie_downloads")
@@ -161,16 +199,18 @@ export async function getMovieById(id: number): Promise<Movie | null> {
   if (!dlErr && dls) {
     tableDownloads = dls as MovieDownload[]
   } else {
-    // Fallback to legacy JSONB if present
     const legacy = (movie as any).download_links
     if (Array.isArray(legacy)) {
       tableDownloads = legacy.map((x: any, idx: number) => ({ url: x?.url ?? "", position: idx + 1 }))
     }
   }
 
-  return { ...(movie as Movie), movie_downloads: tableDownloads }
+  const full = { ...(movie as Movie), movie_downloads: tableDownloads }
+  setCache(key, full)
+  return full
 }
 
+/* -------------------- Mutations (invalidate cache) -------------------- */
 export async function addMovie(
   movie: Omit<Movie, "id" | "created_at" | "updated_at" | "movie_downloads">,
 ): Promise<Movie | null> {
@@ -179,6 +219,8 @@ export async function addMovie(
     console.error("Error adding movie:", error)
     return null
   }
+  clearCache("movies:")
+  clearCache("featured:")
   return data as Movie
 }
 
@@ -188,6 +230,9 @@ export async function updateMovie(id: number, movie: Partial<Movie>): Promise<Mo
     console.error("Error updating movie:", error)
     return null
   }
+  clearCache(`movie:${id}`)
+  clearCache("movies:")
+  clearCache("featured:")
   return data as Movie
 }
 
@@ -197,10 +242,12 @@ export async function deleteMovie(id: number): Promise<boolean> {
     console.error("Error deleting movie:", error)
     return false
   }
+  clearCache(`movie:${id}`)
+  clearCache("movies:")
+  clearCache("featured:")
   return true
 }
 
-// Downloads: use normalized table if it exists; fall back to legacy JSONB column
 function isRelationMissing(err: any) {
   const code = err?.code || ""
   const msg = err?.message || err?.details || ""
@@ -219,19 +266,20 @@ export async function setMovieDownloads(movieId: number, urls: string[]) {
       const insRes = await supabase.from("movie_downloads").insert(rows)
       if (insRes.error) throw insRes.error
     }
+    clearCache(`movie:${movieId}`)
     return
   } catch (err: any) {
     if (isRelationMissing(err)) {
-      // Fallback to legacy JSONB column if table missing
       const jsonb = filtered.map((url) => ({ url }))
       await supabase.from("movies").update({ download_links: jsonb }).eq("id", movieId)
+      clearCache(`movie:${movieId}`)
       return
     }
     console.error("Error saving downloads:", err)
   }
 }
 
-// Join Links
+/* -------------------- Join Links -------------------- */
 export async function getJoinLinks(): Promise<JoinLink[]> {
   const { data, error } = await supabase.from("join_links").select("*").order("id", { ascending: true })
   if (error) {
