@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { X, Plus, Edit, Trash2, Save, Eye, EyeOff, LogOut } from "lucide-react"
+import { X, Plus, Edit, Trash2, Save, Eye, EyeOff, LogOut, Search } from "lucide-react"
 import Image from "next/image"
 import {
   getMovies,
@@ -21,6 +21,7 @@ import {
   setMovieDownloads,
   getMovieById,
   adminVerify,
+  getGenres,
   type Movie,
   type JoinLink,
 } from "@/lib/supabase"
@@ -31,7 +32,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
-  // App-level "session" (localStorage only)
+  // App-level "session" (sessionStorage only)
   const [sessionChecked, setSessionChecked] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
@@ -40,12 +41,14 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
   const [showPassword, setShowPassword] = useState(false)
 
   // UI state
-  const [activeTab, setActiveTab] = useState("list")
+  const [activeTab, setActiveTab] = useState<"list" | "form" | "join-links">("list")
   const [loading, setLoading] = useState(false)
 
   // Data state
   const [movies, setMovies] = useState<Movie[]>([])
+  const [listSearch, setListSearch] = useState("")
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null)
+  const [genreOptions, setGenreOptions] = useState<string[]>([])
   const [formData, setFormData] = useState({
     title: "",
     year: "",
@@ -64,9 +67,13 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
   const [editingJoinLink, setEditingJoinLink] = useState<JoinLink | null>(null)
   const [joinLinkForm, setJoinLinkForm] = useState({ title: "", description: "", url: "" })
 
-  // Check "session" from localStorage
+  // Check "session" from sessionStorage
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("ss_admin") : null
+    // Clear legacy persisted login from older version
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("ss_admin")
+    }
+    const saved = typeof window !== "undefined" ? window.sessionStorage.getItem("ss_admin") : null
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
@@ -81,9 +88,11 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
   const loadData = async () => {
     setLoading(true)
-    const [moviesData, joinLinksData] = await Promise.all([getMovies(), getJoinLinks()])
+    const [moviesData, joinLinksData, genreNames] = await Promise.all([getMovies(), getJoinLinks(), getGenres()])
     setMovies(moviesData)
     setJoinLinks(joinLinksData)
+    const uniq = Array.from(new Set(genreNames.concat(["Horror"])))
+    setGenreOptions(uniq)
     setLoading(false)
   }
 
@@ -94,9 +103,8 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
       setAuthError("Invalid Gmail or password. Please try again.")
       return
     }
-    // Save "session"
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("ss_admin", JSON.stringify({ email: email.trim(), t: Date.now() }))
+      window.sessionStorage.setItem("ss_admin", JSON.stringify({ email: email.trim(), t: Date.now() }))
     }
     setIsAuthenticated(true)
     await loadData()
@@ -104,7 +112,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
   const handleLogout = async () => {
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem("ss_admin")
+      window.sessionStorage.removeItem("ss_admin")
     }
     setIsAuthenticated(false)
     setEmail("")
@@ -222,6 +230,12 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
     setActiveTab("form")
   }
 
+  const filteredMovies = useMemo(() => {
+    const q = listSearch.trim().toLowerCase()
+    if (!q) return movies
+    return movies.filter((m) => m.title.toLowerCase().includes(q))
+  }, [movies, listSearch])
+
   // AUTH SCREEN
   if (!sessionChecked || !isAuthenticated) {
     return (
@@ -311,7 +325,8 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                 </Button>
               </div>
             </div>
-            <div className="flex space-x-3 mt-4">
+
+            <div className="flex flex-wrap gap-3 mt-4 items-center">
               <Button
                 onClick={() => setActiveTab("list")}
                 className={
@@ -349,8 +364,22 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
               >
                 Join Links
               </Button>
+
+              {/* Search in Admin List */}
+              {activeTab === "list" && (
+                <div className="relative ml-auto w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 h-4 w-4" />
+                  <Input
+                    placeholder="Search by title..."
+                    value={listSearch}
+                    onChange={(e) => setListSearch(e.target.value)}
+                    className="pl-10 bg-white/10 border-orange-400/30 text-white placeholder:text-white/50 h-10 rounded-full focus:border-teal-400"
+                  />
+                </div>
+              )}
             </div>
           </CardHeader>
+
           <CardContent>
             {loading && (
               <div className="flex items-center justify-center py-8">
@@ -361,7 +390,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
 
             {!loading && activeTab === "list" && (
               <div className="space-y-4">
-                {movies.map((movie) => {
+                {filteredMovies.map((movie) => {
                   const dlCount =
                     (movie.movie_downloads && movie.movie_downloads.length) ||
                     (movie.download_links && movie.download_links.length) ||
@@ -415,6 +444,9 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                     </div>
                   )
                 })}
+                {filteredMovies.length === 0 && (
+                  <p className="text-white/70 text-center py-6">No movies found for this search.</p>
+                )}
               </div>
             )}
 
@@ -459,6 +491,38 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   </div>
                 </div>
 
+                {/* Dynamic Genres */}
+                <div>
+                  <Label className="text-white font-medium mb-3 block">Genres</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {genreOptions.map((g) => {
+                      const checked = formData.selectedGenres.includes(g)
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => {
+                              const exists = prev.selectedGenres.includes(g)
+                              const selected = exists
+                                ? prev.selectedGenres.filter((x) => x !== g)
+                                : [...prev.selectedGenres, g]
+                              return { ...prev, selectedGenres: selected }
+                            })
+                          }}
+                          className={`px-3 py-1 rounded-full text-sm border transition ${
+                            checked
+                              ? "bg-gradient-to-r from-orange-500 to-teal-500 text-white border-transparent"
+                              : "bg-gray-800/50 text-white border border-gray-600/50 hover:bg-white/10"
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 <div>
                   <Label className="text-white font-medium mb-3 block">Movie Image URL</Label>
                   <Input
@@ -467,7 +531,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                     className="bg-white/10 border-orange-400/30 text-white h-12 focus:border-teal-400"
                     placeholder="https://example.com/movie-image.jpg"
                   />
-                  <p className="text-gray-400 text-sm mt-2">This image will be used for both poster and banner</p>
+                  <p className="text-gray-300 text-sm mt-2">This image will be used for both poster and banner</p>
                 </div>
 
                 <div>
@@ -485,7 +549,7 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="bg-white/10 border-orange-400/30 text-white mt-2 focus:border-teal-400 placeholder:text-white/50"
+                    className="bg-white/10 border-orange-400/30 text-white mt-2 focus:border-teal-400 placeholder:text-white/80"
                     rows={4}
                     placeholder="Enter movie description"
                   />
@@ -559,8 +623,8 @@ export default function AdminPanel({ onClose, onDataChange }: AdminPanelProps) {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h4 className="text-white font-bold text-lg mb-2">{link.title}</h4>
-                          <p className="text-gray-400 text-sm mb-2 line-clamp-2">{link.description}</p>
-                          <p className="text-teal-400 text-xs">{link.url}</p>
+                          <p className="text-white/80 text-sm mb-2 line-clamp-2">{link.description}</p>
+                          <p className="text-teal-300 text-xs">{link.url}</p>
                         </div>
                         <Button
                           onClick={() => {

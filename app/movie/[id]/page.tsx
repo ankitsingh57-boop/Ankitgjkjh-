@@ -112,7 +112,7 @@ export default function MoviePage({ params }: MoviePageProps) {
             </div>
           </div>
 
-          {/* Info + Trailer + Downloads */}
+          {/* Info + Trailer + Description + Downloads */}
           <div className="lg:col-span-2 space-y-8">
             <div>
               <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
@@ -151,6 +151,20 @@ export default function MoviePage({ params }: MoviePageProps) {
                   autoLoadWhenInView={true}
                   className="border border-white/10"
                 />
+              </div>
+            )}
+
+            {/* Description */}
+            {movie.description && (
+              <div style={{ contentVisibility: "auto" }}>
+                <Card className="bg-gradient-to-br from-white/10 to-transparent border-white/10 backdrop-blur-sm shadow-2xl">
+                  <CardContent className="p-6 sm:p-8">
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                      <span className="text-orange-400">Movie</span> <span className="text-teal-400">Description</span>
+                    </h2>
+                    <p className="text-white/80 leading-relaxed whitespace-pre-line">{movie.description}</p>
+                  </CardContent>
+                </Card>
               </div>
             )}
 

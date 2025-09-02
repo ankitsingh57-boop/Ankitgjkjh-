@@ -43,6 +43,11 @@ export interface JoinLink {
   updated_at: string
 }
 
+export interface Genre {
+  id?: number
+  name: string
+}
+
 /**
  * Admin password verification using DB-only table (no Supabase Auth).
  * Returns true if email/password are correct.
@@ -56,7 +61,25 @@ export async function adminVerify(email: string, password: string): Promise<bool
   return !!data
 }
 
-// Movies (legacy full fetch)
+// Default genres used as fallback if genres table is missing/empty
+const DEFAULT_GENRES = ["Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance", "Horror"]
+
+export async function getGenres(): Promise<string[]> {
+  try {
+    const { data, error } = await supabase.from("genres").select("name").order("name", { ascending: true })
+    if (error) throw error
+    const names = (data || []).map((g: any) => g.name).filter(Boolean)
+    // Ensure at least one genre exists; include Horror if missing
+    const merged = Array.from(new Set([...(names.length ? names : DEFAULT_GENRES)]))
+    if (!merged.includes("Horror")) merged.push("Horror")
+    return merged
+  } catch (err: any) {
+    // relation might not exist -> fallback
+    return DEFAULT_GENRES
+  }
+}
+
+// Movies (legacy full fetch, still used in Admin Panel list)
 export async function getMovies(): Promise<Movie[]> {
   const { data, error } = await supabase.from("movies").select("*").order("created_at", { ascending: false })
   if (error) {

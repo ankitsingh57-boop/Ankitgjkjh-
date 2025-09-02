@@ -8,9 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import AdminPanel from "@/components/admin-panel"
-import { getMoviesPaged, getFeaturedMovies, type Movie } from "@/lib/supabase"
-
-const categories = ["All", "Action", "Adventure", "Drama", "Sci-Fi", "Crime", "Comedy", "Thriller", "Romance"]
+import { getMoviesPaged, getFeaturedMovies, getGenres, type Movie } from "@/lib/supabase"
 
 export default function HomePage() {
   const [movies, setMovies] = useState<Movie[]>([])
@@ -18,13 +16,13 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [showAdmin, setShowAdmin] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [categories, setCategories] = useState<string[]>(["All"])
   const [selectedCategory, setSelectedCategory] = useState("All")
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 40
   const [totalMovies, setTotalMovies] = useState(0)
-
   const totalPages = Math.max(1, Math.ceil(totalMovies / pageSize))
 
   // Hero rotation
@@ -37,6 +35,14 @@ export default function HomePage() {
       return () => clearInterval(interval)
     }
   }, [featuredMovies.length])
+
+  // Load genres for categories
+  useEffect(() => {
+    ;(async () => {
+      const names = await getGenres()
+      setCategories(["All", ...names])
+    })()
+  }, [])
 
   // Load movies for current page/filter/search
   useEffect(() => {
@@ -100,7 +106,6 @@ export default function HomePage() {
         <AdminPanel
           onClose={() => setShowAdmin(false)}
           onDataChange={() => {
-            // refresh current page after admin changes
             setCurrentPage(1)
           }}
         />
@@ -141,7 +146,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center space-x-3">
               <div className="relative hidden sm:block">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 h-4 w-4" />
                 <Input
                   placeholder="Search movies..."
                   value={searchTerm}
@@ -170,7 +175,7 @@ export default function HomePage() {
           {/* Mobile Search */}
           <div className="sm:hidden mt-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 h-4 w-4" />
               <Input
                 placeholder="Search movies..."
                 value={searchTerm}
@@ -249,7 +254,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Categories */}
+      {/* Categories (dynamic) */}
       <section className="container mx-auto px-4 py-6" style={{ contentVisibility: "auto" }}>
         <div className="flex flex-wrap gap-2 justify-center">
           {categories.map((category) => (
