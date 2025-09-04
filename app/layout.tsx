@@ -1,6 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import ClientLayout from "./ClientLayout"
+import Script from "next/script"
+import "./globals.css" // Import globals.css at the top of the file
 
 export const metadata: Metadata = {
   title: "Smart Saathi - Movie Download Website",
@@ -14,8 +16,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <ClientLayout>{children}</ClientLayout>
+  return (
+    <>
+      {/* Google Analytics */}
+      <Script src="https://www.googletagmanager.com/gtag/js?id=G-KJ2F868DMX" strategy="afterInteractive" />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-KJ2F868DMX');
+        `}
+      </Script>
+      <ClientLayout>{children}</ClientLayout>
+    </>
+  )
 }
-
-
-import './globals.css'
