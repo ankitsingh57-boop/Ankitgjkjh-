@@ -246,7 +246,7 @@ export default function MoviePage({ params }: MoviePageProps) {
             </div>
           </div>
           <div className="border-t border-white/10 mt-8 pt-6 text-center text-white/60">
-            <p>&copy; 2024 Smart Saathi. All rights reserved.</p>
+            <p>&copy; 2025 Smart Saathi. All rights reserved.</p>
           </div>
         </div>
       </footer>
