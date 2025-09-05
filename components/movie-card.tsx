@@ -28,13 +28,13 @@ type Props = {
 function MovieCardBase({ movie = defaultMovie }: Props) {
   return (
     <div
-      className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-transform hover:scale-[1.01] transform-gpu"
+      className="group relative bg-gradient-to-b from-white/10 to-transparent rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-transform hover:scale-[1.02] transform-gpu"
       style={{
         contentVisibility: "auto",
-        containIntrinsicSize: "320px 220px",
+        containIntrinsicSize: "280px 200px",
       }}
     >
-      <div className="relative aspect-[3/4.5] overflow-hidden">
+      <div className="relative aspect-[2/3] sm:aspect-[3/4.5] overflow-hidden">
         <Image
           src={movie.image_url || "/placeholder.svg"}
           alt={movie.title}
@@ -44,23 +44,23 @@ function MovieCardBase({ movie = defaultMovie }: Props) {
           priority={false}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute top-3 right-3">
-          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold text-xs">
-            <Star className="w-3 h-3 mr-1" />
+        <div className="absolute top-2 right-2">
+          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black font-bold text-xs px-2 py-1">
+            <Star className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
             {movie.rating}
           </Badge>
         </div>
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-3 rounded-full shadow-xl">
-            <Play className="h-4 w-4 text-white" />
+          <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-2 sm:p-3 rounded-full shadow-xl">
+            <Play className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
           </div>
         </div>
       </div>
-      <div className="p-3 bg-gradient-to-r from-purple-900/20 to-transparent">
-        <h3 className="text-white font-bold text-sm md:text-base group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
+      <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-900/20 to-transparent">
+        <h3 className="text-white font-bold text-xs sm:text-sm md:text-base group-hover:text-orange-400 transition-colors line-clamp-1 mb-1">
           {movie.title}
         </h3>
-        <p className="text-teal-300 text-xs md:text-sm font-medium">{movie.year}</p>
+        <p className="text-teal-300 text-xs sm:text-sm font-medium">{movie.year}</p>
       </div>
     </div>
   )

@@ -91,11 +91,11 @@ export default function MoviePage({ params }: MoviePageProps) {
 
       {/* Content */}
       <section className="container mx-auto px-4 py-10" style={{ contentVisibility: "auto" }}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
           {/* Poster */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24">
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative aspect-[2/3] sm:aspect-[3/4] max-w-sm mx-auto lg:max-w-none rounded-2xl overflow-hidden shadow-2xl">
                 <Image
                   src={movie.image_url || "/placeholder.svg"}
                   alt={movie.title}
@@ -117,11 +117,11 @@ export default function MoviePage({ params }: MoviePageProps) {
           {/* Info + Trailer + Description + Downloads */}
           <div className="lg:col-span-2 space-y-8">
             <div>
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
                 <span className="text-orange-400">{movie.title.split(" ")[0]}</span>{" "}
                 <span className="text-teal-400">{movie.title.split(" ").slice(1).join(" ")}</span>
               </h1>
-              <div className="flex items-center gap-4 sm:gap-8 text-white/80 mb-6 text-base sm:text-lg">
+              <div className="flex items-center gap-3 sm:gap-4 md:gap-8 text-white/80 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg flex-wrap">
                 <span className="flex items-center bg-white/10 px-3 sm:px-4 py-2 rounded-full backdrop-blur-sm">
                   <Calendar className="w-5 h-5 mr-2" />
                   {movie.year}
@@ -131,9 +131,12 @@ export default function MoviePage({ params }: MoviePageProps) {
                   {movie.duration}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
                 {movie.genre.map((g: string) => (
-                  <Badge key={g} className="bg-gradient-to-r from-orange-500 to-teal-500 text-white px-4 py-2 text-sm">
+                  <Badge
+                    key={g}
+                    className="bg-gradient-to-r from-orange-500 to-teal-500 text-white px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm"
+                  >
                     {g}
                   </Badge>
                 ))}
@@ -143,7 +146,7 @@ export default function MoviePage({ params }: MoviePageProps) {
             {/* Trailer above Download Links */}
             {movie.trailer_url && (
               <div style={{ contentVisibility: "auto" }}>
-                <h2 className="text-2xl font-bold text-white mb-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
                   <span className="text-orange-400">Movie</span> <span className="text-teal-400">Trailer</span>
                 </h2>
                 <TrailerPlayer
@@ -163,8 +166,8 @@ export default function MoviePage({ params }: MoviePageProps) {
                   className="border-white/20 backdrop-blur-md shadow-2xl"
                   style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
                 >
-                  <CardContent className="p-6 sm:p-8">
-                    <h2 className="text-2xl font-bold text-white mb-4">
+                  <CardContent className="p-4 sm:p-6 md:p-8">
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
                       <span className="text-orange-400">Movie</span> <span className="text-teal-400">Description</span>
                     </h2>
                     <p className="text-white/90 leading-relaxed whitespace-pre-line">{movie.description}</p>
@@ -179,8 +182,8 @@ export default function MoviePage({ params }: MoviePageProps) {
                 className="bg-gradient-to-br from-orange-600/20 to-teal-600/20 border-orange-400/30 backdrop-blur-sm shadow-2xl"
                 style={{ backgroundColor: "rgba(0, 0, 0, 0.35)" }}
               >
-                <CardContent className="p-6 sm:p-8">
-                  <h2 className="text-3xl font-bold text-white mb-6 sm:mb-8 flex items-center">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center">
                     <Download className="mr-3 h-8 w-8 text-orange-400" />
                     <span className="text-orange-400">Download</span> <span className="text-teal-400 ml-2">Links</span>
                   </h2>

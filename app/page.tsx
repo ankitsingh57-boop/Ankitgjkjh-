@@ -160,13 +160,13 @@ export default function HomePage() {
       )}
 
       <header className="border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-40 will-change-transform">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-teal-400 rounded-full blur-lg opacity-60 group-hover:opacity-90 transition-opacity"></div>
-                  <div className="relative w-10 h-10 bg-gradient-to-br from-orange-400 to-teal-400 rounded-full p-2 flex items-center justify-center">
+                  <div className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-400 to-teal-400 rounded-full p-2 flex items-center justify-center">
                     <Image
                       src="/logo.png"
                       alt="Smart Saathi Logo"
@@ -176,7 +176,7 @@ export default function HomePage() {
                     />
                   </div>
                 </div>
-                <div className="text-xl md:text-2xl font-bold">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">
                   <span className="text-orange-400">Smart</span> <span className="text-teal-400">Saathi</span>
                 </div>
               </Link>
@@ -199,7 +199,7 @@ export default function HomePage() {
                   placeholder="Search movies..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-10 bg-white/10 border-orange-400/30 text-white placeholder:text-white/50 w-48 h-8 rounded-full focus:border-teal-400 transition-colors"
+                  className="pl-10 bg-white/10 border-orange-400/30 text-white placeholder:text-white/50 w-40 sm:w-48 md:w-56 h-8 rounded-full focus:border-teal-400 transition-colors"
                 />
               </div>
               <Link href="/join" prefetch={false}>
@@ -237,27 +237,33 @@ export default function HomePage() {
 
       {/* Hero */}
       {currentHeroMovie && (
-        <section className="relative h-[42vh] md:h-[54vh] overflow-hidden" style={{ contentVisibility: "auto" }}>
+        <section
+          className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden"
+          style={{ contentVisibility: "auto" }}
+        >
           <Link href={`/movie/${currentHeroMovie.id}`} className="block h-full" prefetch={false}>
             <div className="absolute inset-0 transition-transform duration-1000 ease-in-out transform hover:scale-105 will-change-transform">
               <Image
                 src={currentHeroMovie.image_url || "/placeholder.svg"}
                 alt={currentHeroMovie.title}
                 fill
-                className="object-cover"
+                className="object-cover object-center"
                 priority
                 sizes="100vw"
+                quality={90}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
+
+            {/* Play Button Overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-500 z-10">
-              <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-4 rounded-full shadow-2xl">
-                <Play className="h-8 w-8 text-white" />
+              <div className="bg-gradient-to-r from-orange-500 to-teal-500 p-4 sm:p-6 rounded-full shadow-2xl">
+                <Play className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
               </div>
             </div>
           </Link>
 
+          {/* Navigation Arrows */}
           {featuredMovies.length > 1 && (
             <>
               <button
@@ -265,24 +271,25 @@ export default function HomePage() {
                   e.preventDefault()
                   prevHero()
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500/80 to-teal-500/80 text-white p-2 rounded-full"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500/90 to-teal-500/90 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform z-20"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={(e) => {
                   e.preventDefault()
                   nextHero()
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500/80 to-teal-500/80 text-white p-2 rounded-full"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-orange-500/90 to-teal-500/90 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform z-20"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </>
           )}
 
+          {/* Dots Indicator */}
           {featuredMovies.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
               {featuredMovies.map((_, index) => (
                 <button
                   key={index}
@@ -290,10 +297,10 @@ export default function HomePage() {
                     e.preventDefault()
                     setCurrentHeroIndex(index)
                   }}
-                  className={`w-2 h-2 rounded-full transition-transform ${
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     index === currentHeroIndex
-                      ? "bg-gradient-to-r from-orange-400 to-teal-400 scale-125"
-                      : "bg-white/40 hover:bg-white/60"
+                      ? "bg-gradient-to-r from-orange-400 to-teal-400 scale-125 shadow-lg"
+                      : "bg-white/50 hover:bg-white/80 hover:scale-110"
                   }`}
                 />
               ))}
@@ -303,14 +310,14 @@ export default function HomePage() {
       )}
 
       {/* Categories (dynamic) */}
-      <section className="container mx-auto px-4 py-6" style={{ contentVisibility: "auto" }}>
-        <div className="flex flex-wrap gap-2 justify-center">
+      <section className="container mx-auto px-3 sm:px-4 py-4 sm:py-6" style={{ contentVisibility: "auto" }}>
+        <div className="flex flex-wrap gap-1 sm:gap-2 justify-center">
           {categories.map((category) => (
             <Button
               key={category}
               onClick={() => startTransition(() => setSelectedCategory(category))}
               size="sm"
-              className={`transition-transform hover:scale-105 px-3 py-1 text-xs rounded-full ${
+              className={`transition-transform hover:scale-105 px-2 sm:px-3 py-1 text-xs rounded-full ${
                 category === selectedCategory
                   ? "bg-gradient-to-r from-orange-500 to-teal-500 text-white shadow-lg"
                   : "bg-gray-800/50 hover:bg-gray-700/50 text-white border border-gray-600/50 hover:border-orange-400/50"
@@ -324,11 +331,11 @@ export default function HomePage() {
 
       {/* Movies Grid */}
       <section className="container mx-auto px-4 py-8" style={{ contentVisibility: "auto" }}>
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">
           <span className="text-orange-400">All</span> <span className="text-teal-400">Movies</span>
         </h2>
 
-        {/* Small inline loader on top of the grid to avoid “cut” */}
+        {/* Small inline loader on top of the grid to avoid "cut" */}
         {listLoading && (
           <div className="flex items-center gap-2 text-white/80 mb-4">
             <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-400 to-teal-400 animate-pulse" />
@@ -336,7 +343,7 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           {movies.map((movie) => (
             <Link key={movie.id} href={`/movie/${movie.id}`} prefetch={false}>
               <MovieCard movie={movie} />
@@ -345,7 +352,7 @@ export default function HomePage() {
         </div>
 
         {/* Pagination */}
-        <div className="mt-8 flex items-center justify-center gap-2 flex-wrap">
+        <div className="mt-6 sm:mt-8 flex items-center justify-center gap-1 sm:gap-2 flex-wrap px-2">
           <Button
             size="sm"
             variant="outline"

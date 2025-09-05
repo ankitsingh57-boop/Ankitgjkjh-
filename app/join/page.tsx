@@ -56,7 +56,7 @@ export default function JoinPage() {
                     />
                   </div>
                 </div>
-                <div className="text-xl md:text-2xl font-bold">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold">
                   <span className="text-orange-400">Smart</span>{" "}
                   <span className="text-teal-400 animate-pulse">Saathi</span>
                 </div>
@@ -77,37 +77,37 @@ export default function JoinPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12 animate-fade-in-up">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               <span className="text-orange-400">Join</span> <span className="text-teal-400">Our Community</span>
             </h1>
-            <p className="text-white/95 text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="text-white/95 text-base sm:text-lg md:text-xl max-w-2xl mx-auto">
               Connect with us and stay updated with the latest movies, exclusive content, and special offers!
             </p>
           </div>
 
           {/* Join Links */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             {joinLinks.map((link, index) => (
               <Card
                 key={link.id}
                 className="border border-white/20 hover:border-orange-400/60 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 animate-fade-in-up"
                 style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", animationDelay: `${index * 0.2}s` }}
               >
-                <CardContent className="p-8">
+                <CardContent className="p-6 sm:p-8">
                   <div className="text-center space-y-6">
-                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
-                      <ExternalLink className="h-8 w-8 text-white" />
+                    <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                      <ExternalLink className="h-6 sm:h-8 w-6 sm:w-8 text-white" />
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-2">{link.title}</h3>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-4">{link.title}</h3>
 
-                    <p className="text-white/90 leading-relaxed text-base">{link.description}</p>
+                    <p className="text-white/90 leading-relaxed text-base sm:text-sm">{link.description}</p>
 
                     <Button
                       onClick={() => window.open(link.url, "_blank")}
-                      className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white py-4 text-lg rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+                      className="w-full bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white py-3 sm:py-4 text-base sm:text-lg rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
                     >
-                      <ExternalLink className="mr-2 h-5 w-5" />
+                      <ExternalLink className="mr-2 h-5 sm:h-6 w-5 sm:w-6" />
                       Join Now
                     </Button>
                   </div>
@@ -120,30 +120,30 @@ export default function JoinPage() {
           <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
             <Card className="border border-white/20 backdrop-blur-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}>
               <CardContent className="p-8">
-                <h3 className="text-2xl font-bold text-white mb-4">
+                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
                   <span className="text-orange-400">Why</span> <span className="text-teal-400">Join Us?</span>
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white/90">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-white/90">
                   <div>
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                    <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 sm:mb-6 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold">1</span>
                     </div>
-                    <h4 className="font-semibold mb-2 text-orange-400">Latest Updates</h4>
-                    <p className="text-sm">Get notified about new movie releases instantly</p>
+                    <h4 className="font-semibold mb-2 sm:mb-4 text-orange-400">Latest Updates</h4>
+                    <p className="text-sm sm:text-base">Get notified about new movie releases instantly</p>
                   </div>
                   <div>
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                    <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 sm:mb-6 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold">2</span>
                     </div>
-                    <h4 className="font-semibold mb-2 text-teal-400">Exclusive Content</h4>
-                    <p className="text-sm">Access to exclusive movies and special content</p>
+                    <h4 className="font-semibold mb-2 sm:mb-4 text-teal-400">Exclusive Content</h4>
+                    <p className="text-sm sm:text-base">Access to exclusive movies and special content</p>
                   </div>
                   <div>
-                    <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
+                    <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 sm:mb-6 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold">3</span>
                     </div>
-                    <h4 className="font-semibold mb-2 text-orange-400">Community Support</h4>
-                    <p className="text-sm">Join a community of movie enthusiasts</p>
+                    <h4 className="font-semibold mb-2 sm:mb-4 text-orange-400">Community Support</h4>
+                    <p className="text-sm sm:text-base">Join a community of movie enthusiasts</p>
                   </div>
                 </div>
               </CardContent>
@@ -157,7 +157,7 @@ export default function JoinPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-teal-400 rounded-full p-2 flex items-center justify-center">
+              <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-orange-400 to-teal-400 rounded-full p-2 flex items-center justify-center">
                 <Image
                   src="/logo.png"
                   alt="Smart Saathi Logo"
@@ -166,7 +166,7 @@ export default function JoinPage() {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h3 className="text-xl font-bold">
+              <h3 className="text-xl sm:text-2xl font-bold">
                 <span className="text-orange-400">Smart</span> <span className="text-teal-400">Saathi</span>
               </h3>
             </div>
